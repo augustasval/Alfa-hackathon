@@ -1,5 +1,4 @@
 import { createClient } from "npm:@supabase/supabase-js@2.39.3";
-import Anthropic from "npm:@anthropic-ai/sdk@0.32.1";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -43,17 +42,23 @@ Deno.serve(async (req: Request) => {
         ).join('\n\n')
       : '';
 
-    const anthropic = new Anthropic({
-      apiKey: Deno.env.get('ANTHROPIC_API_KEY') || '',
-    });
+    const LOVABLE_API_KEY = Deno.env.get('LOVABLE_API_KEY');
+    if (!LOVABLE_API_KEY) {
+      throw new Error('LOVABLE_API_KEY is not configured');
+    }
 
-    const response = await anthropic.messages.create({
-      model: 'claude-3-5-sonnet-20241022',
-      max_tokens: 1024,
-      messages: [
-        {
-          role: 'user',
-          content: `Analyze this tutoring session and create a parent-friendly report.
+    const response = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${LOVABLE_API_KEY}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        model: 'google/gemini-2.5-flash',
+        messages: [
+          {
+            role: 'user',
+            content: `Analyze this tutoring session and create a parent-friendly report.
 
 Session details:
 - Topic: ${session.topic}
@@ -78,11 +83,19 @@ Format as JSON:
   "recommendations": "...",
   "struggle_areas": "..."
 }`
-        },
-      ],
+          }
+        ],
+      }),
     });
 
-    const reportText = response.content[0].type === 'text' ? response.content[0].text : '{}';
+    if (!response.ok) {
+      const errorText = await response.text();
+      console.error('AI gateway error:', response.status, errorText);
+      throw new Error('AI service error');
+    }
+
+    const data = await response.json();
+    const reportText = data.choices?.[0]?.message?.content || '{}';
     const reportData = JSON.parse(reportText);
 
     const accuracyPercentage = session.problems_attempted > 0
