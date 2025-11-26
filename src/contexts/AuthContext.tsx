@@ -5,12 +5,8 @@ import { supabase } from '@/integrations/supabase/client';
 interface Profile {
   id: string;
   email: string;
-  name: string | null;
+  full_name: string;
   role: 'parent' | 'student';
-  grade_level: number | null;
-  subscription_status: string;
-  invite_code: string;
-  invite_code_expires_at: string | null;
   created_at: string;
   updated_at: string;
 }
@@ -19,7 +15,7 @@ interface AuthContextType {
   user: User | null;
   profile: Profile | null;
   loading: boolean;
-  signUp: (email: string, password: string, role: 'parent' | 'student') => Promise<{ needsEmailConfirmation: boolean }>;
+  signUp: (email: string, password: string, fullName: string, role: 'parent' | 'student') => Promise<{ needsEmailConfirmation: boolean }>;
   signIn: (email: string, password: string) => Promise<void>;
   signInWithGoogle: (role: 'parent' | 'student') => Promise<void>;
   signOut: () => Promise<void>;
@@ -72,12 +68,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   }
 
-  async function signUp(email: string, password: string, role: 'parent' | 'student'): Promise<{ needsEmailConfirmation: boolean }> {
+  async function signUp(email: string, password: string, fullName: string, role: 'parent' | 'student'): Promise<{ needsEmailConfirmation: boolean }> {
     const { data, error } = await supabase.auth.signUp({
       email,
       password,
       options: {
-        data: { role },
+        emailRedirectTo: `${window.location.origin}/`,
+        data: { 
+          role,
+          full_name: fullName
+        },
       },
     });
 
