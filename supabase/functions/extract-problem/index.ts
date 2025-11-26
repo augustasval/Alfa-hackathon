@@ -1,5 +1,3 @@
-import Anthropic from "npm:@anthropic-ai/sdk@0.32.1";
-
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Methods": "GET, POST, PUT, DELETE, OPTIONS",
@@ -21,35 +19,47 @@ Deno.serve(async (req: Request) => {
   try {
     const { image }: RequestBody = await req.json();
 
-    const anthropic = new Anthropic({
-      apiKey: Deno.env.get('ANTHROPIC_API_KEY') || '',
-    });
+    const LOVABLE_API_KEY = Deno.env.get('LOVABLE_API_KEY');
+    if (!LOVABLE_API_KEY) {
+      throw new Error('LOVABLE_API_KEY is not configured');
+    }
 
-    const response = await anthropic.messages.create({
-      model: 'claude-3-5-sonnet-20241022',
-      max_tokens: 1024,
-      messages: [
-        {
-          role: 'user',
-          content: [
-            {
-              type: 'image',
-              source: {
-                type: 'base64',
-                media_type: 'image/jpeg',
-                data: image,
+    const response = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${LOVABLE_API_KEY}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        model: 'google/gemini-2.5-flash',
+        messages: [
+          {
+            role: 'user',
+            content: [
+              {
+                type: 'text',
+                text: 'Extract the math problem from this image. Return only the problem text, exactly as written, with proper mathematical notation. If there are multiple problems, extract the first one.'
               },
-            },
-            {
-              type: 'text',
-              text: 'Extract the math problem from this image. Return only the problem text, exactly as written, with proper mathematical notation. If there are multiple problems, extract the first one.'
-            }
-          ],
-        },
-      ],
+              {
+                type: 'image_url',
+                image_url: {
+                  url: `data:image/jpeg;base64,${image}`
+                }
+              }
+            ]
+          }
+        ],
+      }),
     });
 
-    const extractedProblem = response.content[0].type === 'text' ? response.content[0].text : '';
+    if (!response.ok) {
+      const errorText = await response.text();
+      console.error('AI gateway error:', response.status, errorText);
+      throw new Error('AI service error');
+    }
+
+    const data = await response.json();
+    const extractedProblem = data.choices?.[0]?.message?.content || '';
 
     return new Response(
       JSON.stringify({

@@ -1,5 +1,3 @@
-import Anthropic from "npm:@anthropic-ai/sdk@0.32.1";
-
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Methods": "GET, POST, PUT, DELETE, OPTIONS",
@@ -18,19 +16,25 @@ Deno.serve(async (req: Request) => {
     const body = await req.json();
     const { action } = body;
 
-    const anthropic = new Anthropic({
-      apiKey: Deno.env.get('ANTHROPIC_API_KEY') || '',
-    });
+    const LOVABLE_API_KEY = Deno.env.get('LOVABLE_API_KEY');
+    if (!LOVABLE_API_KEY) {
+      throw new Error('LOVABLE_API_KEY is not configured');
+    }
 
     if (action === 'start_session') {
       const { topic, numProblems } = body;
 
-      const response = await anthropic.messages.create({
-        model: 'claude-3-5-sonnet-20241022',
-        max_tokens: 2048,
-        messages: [{
-          role: 'user',
-          content: `Generate ${numProblems} practice problems for the topic: ${topic}
+      const response = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${LOVABLE_API_KEY}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          model: 'google/gemini-2.5-flash',
+          messages: [{
+            role: 'user',
+            content: `Generate ${numProblems} practice problems for the topic: ${topic}
 
 The problems should:
 - Start easy and gradually increase in difficulty
@@ -45,10 +49,18 @@ Return ONLY a JSON array in this exact format, with no additional text:
 ]
 
 The answer should be the simplified final answer the student should provide.`
-        }]
+          }],
+        }),
       });
 
-      const responseText = response.content[0].type === 'text' ? response.content[0].text : '';
+      if (!response.ok) {
+        const errorText = await response.text();
+        console.error('AI gateway error:', response.status, errorText);
+        throw new Error('AI service error');
+      }
+
+      const data = await response.json();
+      const responseText = data.choices?.[0]?.message?.content || '[]';
       const problems = JSON.parse(responseText);
 
       return new Response(
@@ -69,12 +81,17 @@ The answer should be the simplified final answer the student should provide.`
         ? `\n\nConversation history:\n${conversationHistory.map((msg: any) => `${msg.role}: ${msg.content}`).join('\n')}`
         : '';
 
-      const response = await anthropic.messages.create({
-        model: 'claude-3-5-sonnet-20241022',
-        max_tokens: 1024,
-        messages: [{
-          role: 'user',
-          content: `You are a patient math tutor checking a student's answer.
+      const response = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${LOVABLE_API_KEY}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          model: 'google/gemini-2.5-flash',
+          messages: [{
+            role: 'user',
+            content: `You are a patient math tutor checking a student's answer.
 
 Problem: ${problem}
 Student's answer: ${studentAnswer}${conversationContext}
@@ -94,10 +111,18 @@ Return ONLY a JSON object in this exact format:
   "isCorrect": true or false,
   "feedback": "Your encouraging feedback here"
 }`
-        }]
+          }],
+        }),
       });
 
-      const responseText = response.content[0].type === 'text' ? response.content[0].text : '{}';
+      if (!response.ok) {
+        const errorText = await response.text();
+        console.error('AI gateway error:', response.status, errorText);
+        throw new Error('AI service error');
+      }
+
+      const data = await response.json();
+      const responseText = data.choices?.[0]?.message?.content || '{}';
       const result = JSON.parse(responseText);
 
       return new Response(
@@ -129,12 +154,17 @@ Return ONLY a JSON object in this exact format:
         helpInstruction = 'The student is completely stuck. Ask them what they understand so far, and guide them to the very first step they need to take. Be extra encouraging.';
       }
 
-      const response = await anthropic.messages.create({
-        model: 'claude-3-5-sonnet-20241022',
-        max_tokens: 1024,
-        messages: [{
-          role: 'user',
-          content: `You are a patient math tutor helping a student who asked for help.
+      const response = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${LOVABLE_API_KEY}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          model: 'google/gemini-2.5-flash',
+          messages: [{
+            role: 'user',
+            content: `You are a patient math tutor helping a student who asked for help.
 
 Problem: ${problem}${studentWorkContext}${conversationContext}
 
@@ -150,10 +180,18 @@ Return ONLY a JSON object in this exact format:
 {
   "guidance": "Your helpful guidance here"
 }`
-        }]
+          }],
+        }),
       });
 
-      const responseText = response.content[0].type === 'text' ? response.content[0].text : '{}';
+      if (!response.ok) {
+        const errorText = await response.text();
+        console.error('AI gateway error:', response.status, errorText);
+        throw new Error('AI service error');
+      }
+
+      const data = await response.json();
+      const responseText = data.choices?.[0]?.message?.content || '{}';
       const result = JSON.parse(responseText);
 
       return new Response(
