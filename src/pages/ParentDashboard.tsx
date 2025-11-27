@@ -291,8 +291,8 @@ export default function ParentDashboard() {
       <nav className="bg-card border-b border-border px-6 py-4 sticky top-0 z-50">
         <div className="max-w-7xl mx-auto flex justify-between items-center">
           <div className="flex items-center gap-2">
-            <img src="/logo/logo.svg?v=2" alt="Jolvita Logo" className="h-12 w-12" />
-            <img src="/name/brand-name.svg?v=2" alt="Jolvita" className="h-8" />
+            <img src="/logo/logo.svg?v=2" alt="Solvita Logo" className="h-12 w-12" />
+            <img src="/name/brand-name.svg?v=2" alt="Solvita" className="h-8" />
             <Badge variant="secondary" className="ml-4">Parent Portal</Badge>
           </div>
           <div className="flex items-center gap-4">
