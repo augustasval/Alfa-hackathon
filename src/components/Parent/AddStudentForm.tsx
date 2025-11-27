@@ -6,8 +6,8 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Alert, AlertDescription } from '@/components/ui/alert';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Loader2, Link, UserPlus } from 'lucide-react';
+import { Loader2, UserPlus, Eye, EyeOff } from 'lucide-react';
+import { toast } from 'sonner';
 
 interface AddStudentFormProps {
   onSuccess: () => void;
@@ -17,13 +17,15 @@ interface AddStudentFormProps {
 export default function AddStudentForm({ onSuccess, onCancel }: AddStudentFormProps) {
   const { user } = useAuth();
   const [name, setName] = useState('');
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
   const [gradeLevel, setGradeLevel] = useState('9');
-  const [inviteCode, setInviteCode] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
-  const [activeTab, setActiveTab] = useState('invite');
+  const [createdCredentials, setCreatedCredentials] = useState<{ email: string; password: string } | null>(null);
 
-  async function handleInviteSubmit(e: FormEvent) {
+  async function handleSubmit(e: FormEvent) {
     e.preventDefault();
     if (!user) return;
 
@@ -31,203 +33,234 @@ export default function AddStudentForm({ onSuccess, onCancel }: AddStudentFormPr
     setLoading(true);
 
     try {
-      // First, find the student profile with this invite code
-      const { data: studentProfile, error: findError } = await supabase
-        .from('profiles')
-        .select('id, email, name, invite_code_expires_at')
-        .eq('invite_code', inviteCode.trim())
-        .eq('role', 'student')
-        .maybeSingle();
+      // Call edge function to create student account
+      const { data, error: functionError } = await supabase.functions.invoke('create-student-account', {
+        body: {
+          name: name.trim(),
+          email: email.trim().toLowerCase(),
+          password,
+          gradeLevel: parseInt(gradeLevel),
+        },
+      });
 
-      if (findError) throw findError;
+      if (functionError) throw functionError;
 
-      if (!studentProfile) {
-        throw new Error('Invalid invite code. Please check the code and try again.');
+      if (!data.success) {
+        throw new Error(data.error || 'Failed to create student account');
       }
 
-      // Check if code is expired
-      if (studentProfile.invite_code_expires_at &&
-          new Date(studentProfile.invite_code_expires_at) < new Date()) {
-        throw new Error('This invite code has expired. Ask your student for a new code.');
-      }
+      // Show success with credentials
+      setCreatedCredentials({
+        email: email.trim().toLowerCase(),
+        password,
+      });
 
-      // Create student entry linked to the profile
-      const { error: insertError } = await supabase
-        .from('students')
-        .insert({
-          parent_id: user.id,
-          name: studentProfile.name || studentProfile.email.split('@')[0],
-          grade_level: 9, // Default grade level
-          linked_profile_id: studentProfile.id,
-        });
-
-      if (insertError) throw insertError;
-      onSuccess();
+      toast.success('Student account created successfully!');
     } catch (err: unknown) {
-      setError(err instanceof Error ? err.message : 'Failed to link student');
+      console.error('Error creating student:', err);
+      setError(err instanceof Error ? err.message : 'Failed to create student account');
     } finally {
       setLoading(false);
     }
   }
 
-  async function handleManualSubmit(e: FormEvent) {
-    e.preventDefault();
-    if (!user) return;
+  // If credentials were created, show them to the parent
+  if (createdCredentials) {
+    return (
+      <div className="space-y-4">
+        <Alert className="bg-green-50 border-green-200">
+          <AlertDescription className="text-green-800">
+            <strong className="block mb-2">Student account created successfully!</strong>
+            <p className="text-sm">Save these credentials securely. Your student will use them to log in.</p>
+          </AlertDescription>
+        </Alert>
 
-    setError('');
-    setLoading(true);
+        <div className="space-y-3 p-4 bg-muted rounded-lg">
+          <div>
+            <Label className="text-xs text-muted-foreground">Email / Username</Label>
+            <div className="flex items-center gap-2 mt-1">
+              <Input
+                value={createdCredentials.email}
+                readOnly
+                className="font-mono bg-background"
+              />
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                onClick={() => {
+                  navigator.clipboard.writeText(createdCredentials.email);
+                  toast.success('Email copied to clipboard');
+                }}
+              >
+                Copy
+              </Button>
+            </div>
+          </div>
 
-    try {
-      const { error: insertError } = await supabase
-        .from('students')
-        .insert({
-          parent_id: user.id,
-          name,
-          grade_level: parseInt(gradeLevel),
-        });
+          <div>
+            <Label className="text-xs text-muted-foreground">Password</Label>
+            <div className="flex items-center gap-2 mt-1">
+              <Input
+                value={createdCredentials.password}
+                readOnly
+                type={showPassword ? 'text' : 'password'}
+                className="font-mono bg-background"
+              />
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                onClick={() => setShowPassword(!showPassword)}
+              >
+                {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+              </Button>
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                onClick={() => {
+                  navigator.clipboard.writeText(createdCredentials.password);
+                  toast.success('Password copied to clipboard');
+                }}
+              >
+                Copy
+              </Button>
+            </div>
+          </div>
+        </div>
 
-      if (insertError) throw insertError;
-      onSuccess();
-    } catch (err: unknown) {
-      setError(err instanceof Error ? err.message : 'Failed to add student');
-    } finally {
-      setLoading(false);
-    }
+        <Alert className="bg-amber-50 border-amber-200">
+          <AlertDescription className="text-amber-800 text-sm">
+            <strong>Important:</strong> This is the only time you'll see this password. Make sure to save it securely and share it with your student.
+          </AlertDescription>
+        </Alert>
+
+        <Button
+          onClick={() => {
+            setCreatedCredentials(null);
+            onSuccess();
+          }}
+          className="w-full"
+        >
+          Done
+        </Button>
+      </div>
+    );
   }
 
   return (
-    <div>
-      <Tabs value={activeTab} onValueChange={setActiveTab}>
-        <TabsList className="grid w-full grid-cols-2 mb-4">
-          <TabsTrigger value="invite" className="flex items-center gap-2">
-            <Link className="h-4 w-4" />
-            Link with Code
-          </TabsTrigger>
-          <TabsTrigger value="manual" className="flex items-center gap-2">
-            <UserPlus className="h-4 w-4" />
-            Add Manually
-          </TabsTrigger>
-        </TabsList>
+    <form onSubmit={handleSubmit} className="space-y-4">
+      <Alert className="bg-blue-50 border-blue-200">
+        <AlertDescription className="text-sm text-blue-800">
+          Create a student account with login credentials that your student will use to access the platform.
+        </AlertDescription>
+      </Alert>
 
-        <TabsContent value="invite">
-          <form onSubmit={handleInviteSubmit} className="space-y-4">
-            <div className="space-y-2">
-              <Label htmlFor="inviteCode">Student's Invite Code</Label>
-              <Input
-                id="inviteCode"
-                type="text"
-                value={inviteCode}
-                onChange={(e) => setInviteCode(e.target.value)}
-                required
-                placeholder="Enter the invite code from your student"
-                className="font-mono"
-              />
-              <p className="text-xs text-muted-foreground">
-                Your student can find their invite code in their Profile page
-              </p>
-            </div>
+      <div className="space-y-2">
+        <Label htmlFor="studentName">Student Name *</Label>
+        <Input
+          id="studentName"
+          type="text"
+          value={name}
+          onChange={(e) => setName(e.target.value)}
+          required
+          placeholder="Enter student's full name"
+        />
+      </div>
 
-            {error && (
-              <Alert variant="destructive">
-                <AlertDescription>{error}</AlertDescription>
-              </Alert>
-            )}
+      <div className="space-y-2">
+        <Label htmlFor="studentEmail">Email / Username *</Label>
+        <Input
+          id="studentEmail"
+          type="email"
+          value={email}
+          onChange={(e) => setEmail(e.target.value)}
+          required
+          placeholder="student@example.com"
+        />
+        <p className="text-xs text-muted-foreground">
+          This will be used as the student's login username
+        </p>
+      </div>
 
-            <div className="flex gap-3 pt-2">
-              <Button
-                type="button"
-                variant="outline"
-                onClick={onCancel}
-                className="flex-1"
-              >
-                Cancel
-              </Button>
-              <Button
-                type="submit"
-                disabled={loading || !inviteCode.trim()}
-                className="flex-1 bg-purple-600 hover:bg-purple-700"
-              >
-                {loading ? (
-                  <>
-                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                    Linking...
-                  </>
-                ) : (
-                  'Link Student'
-                )}
-              </Button>
-            </div>
-          </form>
-        </TabsContent>
+      <div className="space-y-2">
+        <Label htmlFor="studentPassword">Password *</Label>
+        <div className="relative">
+          <Input
+            id="studentPassword"
+            type={showPassword ? 'text' : 'password'}
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            required
+            minLength={6}
+            placeholder="Create a secure password"
+          />
+          <Button
+            type="button"
+            variant="ghost"
+            size="sm"
+            className="absolute right-0 top-0 h-full px-3"
+            onClick={() => setShowPassword(!showPassword)}
+          >
+            {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+          </Button>
+        </div>
+        <p className="text-xs text-muted-foreground">
+          Minimum 6 characters. Save this password - you'll need to share it with your student.
+        </p>
+      </div>
 
-        <TabsContent value="manual">
-          <form onSubmit={handleManualSubmit} className="space-y-4">
-            <div className="space-y-2">
-              <Label htmlFor="studentName">Student Name</Label>
-              <Input
-                id="studentName"
-                type="text"
-                value={name}
-                onChange={(e) => setName(e.target.value)}
-                required
-                placeholder="Enter student's name"
-              />
-            </div>
+      <div className="space-y-2">
+        <Label htmlFor="gradeLevel">Grade Level *</Label>
+        <Select value={gradeLevel} onValueChange={setGradeLevel}>
+          <SelectTrigger>
+            <SelectValue placeholder="Select grade" />
+          </SelectTrigger>
+          <SelectContent>
+            {Array.from({ length: 12 }, (_, i) => i + 1).map((grade) => (
+              <SelectItem key={grade} value={grade.toString()}>
+                Grade {grade}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+      </div>
 
-            <div className="space-y-2">
-              <Label htmlFor="gradeLevel">Grade Level</Label>
-              <Select value={gradeLevel} onValueChange={setGradeLevel}>
-                <SelectTrigger>
-                  <SelectValue placeholder="Select grade" />
-                </SelectTrigger>
-                <SelectContent>
-                  {Array.from({ length: 12 }, (_, i) => i + 1).map((grade) => (
-                    <SelectItem key={grade} value={grade.toString()}>
-                      Grade {grade}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
+      {error && (
+        <Alert variant="destructive">
+          <AlertDescription>{error}</AlertDescription>
+        </Alert>
+      )}
 
-            <p className="text-xs text-muted-foreground">
-              Note: Adding a student manually will not link to their account.
-              Use "Link with Code" to connect to an existing student account.
-            </p>
-
-            {error && (
-              <Alert variant="destructive">
-                <AlertDescription>{error}</AlertDescription>
-              </Alert>
-            )}
-
-            <div className="flex gap-3 pt-2">
-              <Button
-                type="button"
-                variant="outline"
-                onClick={onCancel}
-                className="flex-1"
-              >
-                Cancel
-              </Button>
-              <Button
-                type="submit"
-                disabled={loading}
-                className="flex-1 bg-purple-600 hover:bg-purple-700"
-              >
-                {loading ? (
-                  <>
-                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                    Adding...
-                  </>
-                ) : (
-                  'Add Student'
-                )}
-              </Button>
-            </div>
-          </form>
-        </TabsContent>
-      </Tabs>
-    </div>
+      <div className="flex gap-3 pt-2">
+        <Button
+          type="button"
+          variant="outline"
+          onClick={onCancel}
+          disabled={loading}
+          className="flex-1"
+        >
+          Cancel
+        </Button>
+        <Button
+          type="submit"
+          disabled={loading}
+          className="flex-1 bg-purple-600 hover:bg-purple-700"
+        >
+          {loading ? (
+            <>
+              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+              Creating Account...
+            </>
+          ) : (
+            <>
+              <UserPlus className="mr-2 h-4 w-4" />
+              Create Student Account
+            </>
+          )}
+        </Button>
+      </div>
+    </form>
   );
 }
