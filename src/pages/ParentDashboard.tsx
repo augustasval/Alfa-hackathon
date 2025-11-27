@@ -91,31 +91,53 @@ export default function ParentDashboard() {
     }
   }, [searchParams, setSearchParams]);
 
-  // Real-time subscription for session updates
+  // Real-time subscriptions for session and student updates
   useEffect(() => {
-    const channel = supabase
+    const sessionsChannel = supabase
       .channel('scheduled-sessions-changes')
       .on(
         'postgres_changes',
         {
-          event: 'UPDATE',
+          event: '*',
           schema: 'public',
           table: 'scheduled_sessions'
         },
         (payload) => {
-          setScheduledSessions(prev =>
-            prev.map(session =>
-              session.id === payload.new.id
-                ? { ...session, ...payload.new as ScheduledSession }
-                : session
-            )
-          );
+          if (payload.eventType === 'INSERT') {
+            setScheduledSessions(prev => [...prev, payload.new as ScheduledSession]);
+          } else if (payload.eventType === 'UPDATE') {
+            setScheduledSessions(prev =>
+              prev.map(session =>
+                session.id === payload.new.id
+                  ? { ...session, ...payload.new as ScheduledSession }
+                  : session
+              )
+            );
+          } else if (payload.eventType === 'DELETE') {
+            setScheduledSessions(prev => prev.filter(session => session.id !== payload.old.id));
+          }
+        }
+      )
+      .subscribe();
+
+    const studentsChannel = supabase
+      .channel('students-changes')
+      .on(
+        'postgres_changes',
+        {
+          event: 'INSERT',
+          schema: 'public',
+          table: 'students'
+        },
+        (payload) => {
+          setStudents(prev => [payload.new as Student, ...prev]);
         }
       )
       .subscribe();
 
     return () => {
-      supabase.removeChannel(channel);
+      supabase.removeChannel(sessionsChannel);
+      supabase.removeChannel(studentsChannel);
     };
   }, []);
   async function loadStudents() {

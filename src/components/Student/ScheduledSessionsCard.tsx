@@ -34,6 +34,46 @@ export function ScheduledSessionsCard() {
     }
   }, [user]);
 
+  // Real-time subscription for session updates
+  useEffect(() => {
+    if (!user) return;
+
+    const channel = supabase
+      .channel('student-sessions-changes')
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'scheduled_sessions'
+        },
+        (payload) => {
+          if (payload.eventType === 'INSERT') {
+            setSessions(prev => [...prev, payload.new as ScheduledSession].sort((a, b) => {
+              const dateCompare = a.scheduled_date.localeCompare(b.scheduled_date);
+              if (dateCompare !== 0) return dateCompare;
+              return a.scheduled_time.localeCompare(b.scheduled_time);
+            }));
+          } else if (payload.eventType === 'UPDATE') {
+            setSessions(prev =>
+              prev.map(session =>
+                session.id === payload.new.id
+                  ? { ...session, ...payload.new as ScheduledSession }
+                  : session
+              )
+            );
+          } else if (payload.eventType === 'DELETE') {
+            setSessions(prev => prev.filter(session => session.id !== payload.old.id));
+          }
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [user]);
+
   // Update current time every second for accurate countdown
   useEffect(() => {
     const interval = setInterval(() => {

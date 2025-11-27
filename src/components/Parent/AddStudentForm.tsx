@@ -56,6 +56,9 @@ export default function AddStudentForm({ onSuccess, onCancel }: AddStudentFormPr
       });
 
       toast.success('Student account created successfully!');
+      
+      // Trigger refresh immediately (real-time will handle the update)
+      // Note: Parent will see the new student via real-time subscription
     } catch (err: unknown) {
       console.error('Error creating student:', err);
       setError(err instanceof Error ? err.message : 'Failed to create student account');
