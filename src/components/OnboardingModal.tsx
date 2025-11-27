@@ -417,8 +417,8 @@ export const OnboardingModal = ({ open, onComplete, existingPlan, onClose }: Onb
       
       onComplete();
       
-      // Navigate to learn page after completing onboarding
-      window.location.href = '/learn';
+      // Navigate to student dashboard to see the plan overview
+      window.location.href = '/student/dashboard';
     } catch (error) {
       console.error('Error generating plan:', error);
       const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred';

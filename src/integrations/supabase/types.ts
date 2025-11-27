@@ -14,6 +14,33 @@ export type Database = {
   }
   public: {
     Tables: {
+      custom_exercises: {
+        Row: {
+          created_at: string | null
+          difficulty: string | null
+          id: string
+          question: string
+          topic: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          difficulty?: string | null
+          id?: string
+          question: string
+          topic: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string | null
+          difficulty?: string | null
+          id?: string
+          question?: string
+          topic?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       learning_plans: {
         Row: {
           created_at: string

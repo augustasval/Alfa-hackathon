@@ -1,6 +1,6 @@
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { ArrowLeft, BookOpen, Camera, Upload, Loader2, X, Edit2, Check, Plus } from "lucide-react";
+import { ArrowLeft, BookOpen, Camera, Upload, Loader2, X, Edit2, Check, Plus, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -12,6 +12,7 @@ import katex from "katex";
 import "katex/dist/katex.min.css";
 import { toast } from "sonner";
 import { Problem, getDifficultyColor } from "@/types/exerciseTypes";
+import { customExerciseService } from "@/lib/customExerciseService";
 
 interface ExtractedStep {
   id: number;
@@ -43,10 +44,45 @@ export const ProblemSelectionScreen = ({
   const [editingStepId, setEditingStepId] = useState<number | null>(null);
   const [editingLatex, setEditingLatex] = useState<string>("");
   const [confirmedProblems, setConfirmedProblems] = useState<Problem[]>([]);
+  const [isLoadingSaved, setIsLoadingSaved] = useState(true);
 
   const easyProblems = problems.filter(p => p.difficulty === 'easy');
   const mediumProblems = problems.filter(p => p.difficulty === 'medium');
   const hardProblems = problems.filter(p => p.difficulty === 'hard');
+
+  // Load saved exercises on mount
+  useEffect(() => {
+    const loadSavedExercises = async () => {
+      if (!currentTaskTitle) {
+        setIsLoadingSaved(false);
+        return;
+      }
+      
+      try {
+        const saved = await customExerciseService.getExercisesByTopic(currentTaskTitle);
+        const savedProblems: Problem[] = saved.map((exercise) => ({
+          id: exercise.id,
+          question: exercise.question,
+          answer: "",
+          hint: "This is a problem you uploaded. Try your best!",
+          difficulty: exercise.difficulty as 'easy' | 'medium' | 'hard',
+          detailedSolution: [
+            {
+              step: "Solve the problem step by step",
+              explanation: "Work through this problem carefully"
+            }
+          ]
+        }));
+        setConfirmedProblems(savedProblems);
+      } catch (error) {
+        console.error('Error loading saved exercises:', error);
+      } finally {
+        setIsLoadingSaved(false);
+      }
+    };
+
+    loadSavedExercises();
+  }, [currentTaskTitle]);
 
   // Get an example exercise from the problems list
   const getExampleExercise = () => {
@@ -112,32 +148,60 @@ export const ProblemSelectionScreen = ({
   };
 
   // Confirm and add extracted problems to the list
-  const handleConfirmProblems = () => {
-    const newProblems: Problem[] = extractedSteps.map((step, index) => ({
-      id: `uploaded-${Date.now()}-${index}`,
-      question: `$${step.latex}$`,
-      answer: "",
-      hint: "This is a problem you uploaded. Try your best!",
-      difficulty: "medium" as const,
-      detailedSolution: [
-        {
-          step: "Solve the problem step by step",
-          explanation: "Work through this problem carefully"
-        }
-      ]
-    }));
+  const handleConfirmProblems = async () => {
+    const topic = currentTaskTitle || 'Practice';
+    
+    try {
+      // Save each exercise to the database
+      for (const step of extractedSteps) {
+        await customExerciseService.saveExercise(
+          topic,
+          `$${step.latex}$`,
+          'medium'
+        );
+      }
 
-    setConfirmedProblems(prev => [...prev, ...newProblems]);
-    setExtractedSteps([]);
-    setUploadedFile(null);
-    if (previewUrl) {
-      URL.revokeObjectURL(previewUrl);
-      setPreviewUrl(null);
+      // Create Problem objects for immediate display
+      const newProblems: Problem[] = extractedSteps.map((step, index) => ({
+        id: `uploaded-${Date.now()}-${index}`,
+        question: `$${step.latex}$`,
+        answer: "",
+        hint: "This is a problem you uploaded. Try your best!",
+        difficulty: "medium" as const,
+        detailedSolution: [
+          {
+            step: "Solve the problem step by step",
+            explanation: "Work through this problem carefully"
+          }
+        ]
+      }));
+
+      setConfirmedProblems(prev => [...prev, ...newProblems]);
+      setExtractedSteps([]);
+      setUploadedFile(null);
+      if (previewUrl) {
+        URL.revokeObjectURL(previewUrl);
+        setPreviewUrl(null);
+      }
+      if (fileInputRef.current) {
+        fileInputRef.current.value = '';
+      }
+      toast.success(`Saved ${newProblems.length} problem(s)!`);
+    } catch (error) {
+      console.error('Error saving exercises:', error);
+      toast.error('Failed to save exercises. Please try again.');
     }
-    if (fileInputRef.current) {
-      fileInputRef.current.value = '';
+  };
+
+  const handleDeleteSavedProblem = async (problemId: string) => {
+    try {
+      await customExerciseService.deleteExercise(problemId);
+      setConfirmedProblems(prev => prev.filter(p => p.id !== problemId));
+      toast.success('Problem deleted');
+    } catch (error) {
+      console.error('Error deleting exercise:', error);
+      toast.error('Failed to delete problem');
     }
-    toast.success(`Added ${newProblems.length} problem(s) to your list!`);
   };
 
   const handleUploadProblem = async () => {
@@ -428,26 +492,47 @@ export const ProblemSelectionScreen = ({
               </div>
             </div>
 
-            {/* Uploaded Problems */}
-            {confirmedProblems.length > 0 && (
+            {/* Saved Custom Problems */}
+            {isLoadingSaved ? (
+              <div className="mb-6 flex justify-center">
+                <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+              </div>
+            ) : confirmedProblems.length > 0 && (
               <div className="mb-6">
                 <div className="flex items-center gap-2 mb-3">
                   <Badge className="bg-purple-500/20 text-purple-400 border-purple-500/50">
                     <Upload className="h-3 w-3 mr-1" />
-                    Your Uploads
+                    Your Saved Problems
                   </Badge>
                 </div>
                 <div className="space-y-2">
                   {confirmedProblems.map((problem) => (
                     <Card
                       key={problem.id}
-                      className="p-4 cursor-pointer transition-all hover:scale-[1.01] hover:bg-purple-500/10 hover:border-purple-500/30 border-2 border-transparent"
-                      onClick={() => onProblemSelect(problem)}
+                      className="p-4 border-2 border-transparent hover:border-purple-500/30"
                     >
-                      <div className="prose prose-sm max-w-none dark:prose-invert">
-                        <ReactMarkdown remarkPlugins={[remarkMath]} rehypePlugins={[rehypeKatex]}>
-                          {problem.question}
-                        </ReactMarkdown>
+                      <div className="flex items-start gap-3">
+                        <div 
+                          className="flex-1 cursor-pointer"
+                          onClick={() => onProblemSelect(problem)}
+                        >
+                          <div className="prose prose-sm max-w-none dark:prose-invert">
+                            <ReactMarkdown remarkPlugins={[remarkMath]} rehypePlugins={[rehypeKatex]}>
+                              {problem.question}
+                            </ReactMarkdown>
+                          </div>
+                        </div>
+                        <Button
+                          size="icon"
+                          variant="ghost"
+                          className="text-destructive hover:text-destructive hover:bg-destructive/10"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleDeleteSavedProblem(problem.id);
+                          }}
+                        >
+                          <Trash2 className="h-4 w-4" />
+                        </Button>
                       </div>
                     </Card>
                   ))}
