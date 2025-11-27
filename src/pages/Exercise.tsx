@@ -9,6 +9,7 @@ import remarkMath from "remark-math";
 import rehypeKatex from "rehype-katex";
 import "katex/dist/katex.min.css";
 import { toast } from "sonner";
+import { supabase } from "@/integrations/supabase/client";
 import { useLearningPlan } from "@/hooks/useLearningPlan";
 import { useTaskProgress } from "@/hooks/useTaskProgress";
 import { SessionManager } from "@/lib/sessionManager";
@@ -178,6 +179,35 @@ const Exercise = () => {
       setCompletedProblemIds(prev => [...prev, selectedProblem.id]);
     }
 
+    // Update active session statistics if session is active
+    const activeSessionId = localStorage.getItem('activeSessionId');
+    if (activeSessionId) {
+      try {
+        // Increment exercises_completed
+        const { data: sessionData } = await supabase
+          .from('scheduled_sessions')
+          .select('exercises_completed, mistakes_count')
+          .eq('id', activeSessionId)
+          .single();
+
+        const updates: { exercises_completed: number; mistakes_count?: number } = {
+          exercises_completed: (sessionData?.exercises_completed || 0) + 1,
+        };
+
+        // Increment mistakes_count if mistakes were made
+        if (selectedIncorrectSteps.length > 0) {
+          updates.mistakes_count = (sessionData?.mistakes_count || 0) + 1;
+        }
+
+        await supabase
+          .from('scheduled_sessions')
+          .update(updates)
+          .eq('id', activeSessionId);
+      } catch (error) {
+        console.error('Error updating session statistics:', error);
+      }
+    }
+
     // Save mistake if any steps were marked incorrect
     if (selectedIncorrectSteps.length > 0 && selectedProblem) {
       try {
@@ -204,6 +234,16 @@ const Exercise = () => {
         if (newCount >= 4) {
           setIsCompleting(true);
           await markTaskComplete(currentTask.id);
+          
+          // Mark session as completed if active
+          if (activeSessionId) {
+            await supabase
+              .from('scheduled_sessions')
+              .update({ status: 'completed' })
+              .eq('id', activeSessionId);
+            localStorage.removeItem('activeSessionId');
+          }
+          
           toast.success("Task completed! Great work!");
           return;
         }

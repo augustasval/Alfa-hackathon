@@ -41,6 +41,8 @@ interface ScheduledSession {
   duration_minutes: number;
   status: string;
   created_at: string;
+  exercises_completed?: number;
+  mistakes_count?: number;
 }
 interface StudentActivity {
   studentId: string;
@@ -406,6 +408,85 @@ export default function ParentDashboard() {
             </CardContent>
           </Card>
         </div>
+
+        {/* Completed Sessions Card */}
+        <Card className="bg-card border-border mb-6">
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2 text-foreground">
+              <CheckCircle className="w-5 h-5 text-primary" />
+              Completed Sessions
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            {scheduledSessions.filter(s => s.status === 'completed').length === 0 ? (
+              <div className="text-center py-8 text-muted-foreground">
+                <CheckCircle className="w-12 h-12 mx-auto mb-4 text-muted-foreground/50" />
+                <p>No completed sessions yet.</p>
+                <p className="text-sm mt-1">Session statistics will appear here after completion.</p>
+              </div>
+            ) : (
+              <div className="space-y-3">
+                {scheduledSessions
+                  .filter(s => s.status === 'completed')
+                  .slice(0, 10)
+                  .map(session => {
+                    const student = students.find(s => s.id === session.student_id);
+                    const exercisesCompleted = session.exercises_completed || 0;
+                    const mistakesCount = session.mistakes_count || 0;
+                    const accuracy = exercisesCompleted > 0 
+                      ? Math.round(((exercisesCompleted - mistakesCount) / exercisesCompleted) * 100)
+                      : 0;
+                    
+                    return (
+                      <div key={session.id} className="p-4 bg-green-500/5 rounded-lg border border-green-500/20">
+                        <div className="flex items-start justify-between gap-3">
+                          <div className="flex-1">
+                            <div className="flex items-center gap-2 mb-1">
+                              <span className="font-semibold text-foreground">{student?.name}</span>
+                              <Badge variant="outline" className="bg-green-500/10 text-green-600 border-green-500/20">
+                                Completed
+                              </Badge>
+                            </div>
+                            <div className="text-sm text-muted-foreground">
+                              {session.topic || 'Practice Session'}
+                            </div>
+                            <div className="flex items-center gap-4 mt-2 text-sm text-muted-foreground">
+                              <span className="flex items-center gap-1">
+                                <CalendarDays className="w-3 h-3" />
+                                {new Date(session.scheduled_date).toLocaleDateString()}
+                              </span>
+                              <span className="flex items-center gap-1">
+                                <Clock className="w-3 h-3" />
+                                {session.scheduled_time}
+                              </span>
+                            </div>
+                          </div>
+                          <div className="text-right">
+                            <div className="grid grid-cols-3 gap-4 text-sm">
+                              <div>
+                                <div className="text-xs text-muted-foreground">Exercises</div>
+                                <div className="font-semibold text-foreground">{exercisesCompleted}</div>
+                              </div>
+                              <div>
+                                <div className="text-xs text-muted-foreground">Mistakes</div>
+                                <div className="font-semibold text-destructive">{mistakesCount}</div>
+                              </div>
+                              <div>
+                                <div className="text-xs text-muted-foreground">Accuracy</div>
+                                <div className={`font-semibold ${accuracy >= 75 ? 'text-green-600' : accuracy >= 50 ? 'text-yellow-600' : 'text-destructive'}`}>
+                                  {accuracy}%
+                                </div>
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    );
+                  })}
+              </div>
+            )}
+          </CardContent>
+        </Card>
 
         {/* Session Reports */}
         <SessionReports students={students} />

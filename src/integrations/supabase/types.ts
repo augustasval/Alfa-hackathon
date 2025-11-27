@@ -237,7 +237,9 @@ export type Database = {
         Row: {
           created_at: string
           duration_minutes: number | null
+          exercises_completed: number | null
           id: string
+          mistakes_count: number | null
           parent_id: string
           scheduled_date: string
           scheduled_time: string
@@ -248,7 +250,9 @@ export type Database = {
         Insert: {
           created_at?: string
           duration_minutes?: number | null
+          exercises_completed?: number | null
           id?: string
+          mistakes_count?: number | null
           parent_id: string
           scheduled_date: string
           scheduled_time: string
@@ -259,7 +263,9 @@ export type Database = {
         Update: {
           created_at?: string
           duration_minutes?: number | null
+          exercises_completed?: number | null
           id?: string
+          mistakes_count?: number | null
           parent_id?: string
           scheduled_date?: string
           scheduled_time?: string
