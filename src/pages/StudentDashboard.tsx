@@ -6,11 +6,12 @@ import { Badge } from "@/components/ui/badge";
 import { OnboardingModal } from "@/components/OnboardingModal";
 import { Navigation } from "@/components/Navigation";
 import { ScheduledSessionsCard } from "@/components/Student/ScheduledSessionsCard";
+import { AccountSwitcher } from "@/components/AccountSwitcher";
 import { useLearningPlan } from "@/hooks/useLearningPlan";
 import { useAuth } from "@/contexts/AuthContext";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import {
-  CheckCircle2, Circle, Loader2, LogOut, CreditCard, RefreshCw
+  CheckCircle2, Circle, Loader2, CreditCard, RefreshCw
 } from "lucide-react";
 import { format, differenceInDays, parseISO, isToday, isPast } from "date-fns";
 import { supabase } from "@/integrations/supabase/client";
@@ -141,14 +142,7 @@ const StudentDashboard = () => {
                 <CreditCard className="h-4 w-4 mr-2" />
                 Plans
               </Button>
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={handleSignOut}
-              >
-                <LogOut className="h-4 w-4 mr-2" />
-                Sign Out
-              </Button>
+              <AccountSwitcher />
             </div>
           </div>
 

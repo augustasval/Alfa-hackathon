@@ -1,6 +1,7 @@
 import { createContext, useContext, useEffect, useState, type ReactNode } from 'react';
 import { type User } from '@supabase/supabase-js';
 import { supabase } from '@/integrations/supabase/client';
+import { accountManager, type StoredAccount } from '@/lib/accountManager';
 
 interface Profile {
   id: string;
@@ -19,10 +20,15 @@ interface AuthContextType {
   user: User | null;
   profile: Profile | null;
   loading: boolean;
+  accounts: StoredAccount[];
   signUp: (email: string, password: string, fullName: string, role: 'parent' | 'student') => Promise<{ needsEmailConfirmation: boolean }>;
   signIn: (email: string, password: string) => Promise<void>;
   signInWithGoogle: (role: 'parent' | 'student') => Promise<void>;
   signOut: () => Promise<void>;
+  addAccount: (email: string, password: string) => Promise<void>;
+  switchAccount: (userId: string) => Promise<void>;
+  signOutOne: (userId: string) => Promise<void>;
+  signOutAll: () => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -31,12 +37,22 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [profile, setProfile] = useState<Profile | null>(null);
   const [loading, setLoading] = useState(true);
+  const [accounts, setAccounts] = useState<StoredAccount[]>([]);
 
   useEffect(() => {
+    // Load stored accounts
+    setAccounts(accountManager.getAccountsList());
+
     supabase.auth.getSession().then(({ data: { session } }) => {
       setUser(session?.user ?? null);
       if (session?.user) {
         loadProfile(session.user.id);
+        // Store this session
+        if (session) {
+          setTimeout(() => {
+            loadProfileAndStore(session);
+          }, 0);
+        }
       } else {
         setLoading(false);
       }
@@ -46,6 +62,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       setUser(session?.user ?? null);
       if (session?.user) {
         loadProfile(session.user.id);
+        // Store this session
+        if (session) {
+          setTimeout(() => {
+            loadProfileAndStore(session);
+          }, 0);
+        }
       } else {
         setProfile(null);
         setLoading(false);
@@ -75,6 +97,29 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       console.error('Error loading profile:', error);
     } finally {
       setLoading(false);
+    }
+  }
+
+  async function loadProfileAndStore(session: any) {
+    try {
+      const { data, error } = await supabase
+        .from('profiles')
+        .select('*')
+        .eq('id', session.user.id)
+        .maybeSingle();
+
+      if (error) throw error;
+      if (data) {
+        accountManager.addAccount(session, {
+          id: data.id,
+          email: data.email,
+          full_name: data.full_name,
+          role: data.role as 'parent' | 'student'
+        });
+        setAccounts(accountManager.getAccountsList());
+      }
+    } catch (error) {
+      console.error('Error loading and storing profile:', error);
     }
   }
 
@@ -174,8 +219,93 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     if (error) throw error;
   }
 
+  async function addAccount(email: string, password: string) {
+    const { data, error } = await supabase.auth.signInWithPassword({
+      email,
+      password,
+    });
+
+    if (error) throw error;
+
+    if (data.user && data.session) {
+      const { data: profile, error: profileError } = await supabase
+        .from('profiles')
+        .select('*')
+        .eq('id', data.user.id)
+        .maybeSingle();
+
+      if (profileError) throw profileError;
+      if (!profile) throw new Error('Profile not found');
+
+      accountManager.addAccount(data.session, {
+        id: profile.id,
+        email: profile.email,
+        full_name: profile.full_name,
+        role: profile.role as 'parent' | 'student'
+      });
+
+      setAccounts(accountManager.getAccountsList());
+
+      // Switch to the newly added account
+      await supabase.auth.setSession({
+        access_token: data.session.access_token,
+        refresh_token: data.session.refresh_token,
+      });
+    }
+  }
+
+  async function switchAccount(userId: string) {
+    const account = accountManager.getAccount(userId);
+    if (!account) {
+      throw new Error('Account not found');
+    }
+
+    const { error } = await supabase.auth.setSession({
+      access_token: account.session.accessToken,
+      refresh_token: account.session.refreshToken,
+    });
+
+    if (error) throw error;
+
+    accountManager.setActiveAccount(userId);
+  }
+
+  async function signOutOne(userId: string) {
+    accountManager.removeAccount(userId);
+    setAccounts(accountManager.getAccountsList());
+
+    // If we signed out the current account, switch to another or sign out completely
+    if (user?.id === userId) {
+      const remainingAccounts = accountManager.getAccountsList();
+      if (remainingAccounts.length > 0) {
+        await switchAccount(remainingAccounts[0].userId);
+      } else {
+        await supabase.auth.signOut();
+      }
+    }
+  }
+
+  async function signOutAll() {
+    accountManager.clearAllAccounts();
+    setAccounts([]);
+    await supabase.auth.signOut();
+  }
+
   return (
-    <AuthContext.Provider value={{ user, profile, loading, signUp, signIn, signInWithGoogle, signOut }}>
+    <AuthContext.Provider value={{ 
+      user, 
+      profile, 
+      loading, 
+      accounts,
+      signUp, 
+      signIn, 
+      signInWithGoogle, 
+      signOut,
+      addAccount,
+      switchAccount,
+      signOutOne,
+      signOutAll
+    }}>
       {children}
     </AuthContext.Provider>
   );

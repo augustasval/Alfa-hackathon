@@ -6,6 +6,7 @@ import AddStudentForm from '@/components/Parent/AddStudentForm';
 import ScheduleSessionForm from '@/components/Parent/ScheduleSessionForm';
 import SessionReports from '@/components/Parent/SessionReports';
 import { StudentMistakesView } from '@/components/Parent/StudentMistakesView';
+import { AccountSwitcher } from '@/components/AccountSwitcher';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
@@ -14,7 +15,6 @@ import {
   Users,
   Plus,
   Calendar,
-  LogOut,
   GraduationCap,
   Clock,
   CalendarDays,
@@ -235,15 +235,11 @@ export default function ParentDashboard() {
             <Badge variant="secondary" className="ml-2">Parent Portal</Badge>
           </div>
           <div className="flex items-center gap-4">
-            <span className="text-muted-foreground">{profile?.full_name}</span>
             <Button variant="outline" size="sm" onClick={() => navigate('/pricing')}>
               <CreditCard className="w-4 h-4 mr-2" />
               Plans
             </Button>
-            <Button variant="outline" size="sm" onClick={handleSignOut}>
-              <LogOut className="w-4 h-4 mr-2" />
-              Sign Out
-            </Button>
+            <AccountSwitcher />
           </div>
         </div>
       </nav>
