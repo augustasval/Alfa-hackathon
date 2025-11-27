@@ -12,7 +12,7 @@ import { toast } from "sonner";
 import { useLearningPlan } from "@/hooks/useLearningPlan";
 import { useTaskProgress } from "@/hooks/useTaskProgress";
 import { SessionManager } from "@/lib/sessionManager";
-import { mistakeStorage } from "@/lib/mistakeStorage";
+import { mistakeService } from "@/lib/mistakeService";
 import { Problem, WebhookStep, getDifficultyColor } from "@/types/exerciseTypes";
 import { problemsByTopic, defaultProblems } from "@/data/exerciseProblems";
 import {
@@ -174,13 +174,16 @@ const Exercise = () => {
 
     // Save mistake if any steps were marked incorrect
     if (selectedIncorrectSteps.length > 0 && selectedProblem) {
-      mistakeStorage.add({
-        type: 'exercise',
-        problem: selectedProblem.question,
-        topic: currentTask?.title || topicId,
-        incorrectSteps: selectedIncorrectSteps,
-        stepDetails: selectedProblem.detailedSolution,
-      });
+      try {
+        await mistakeService.saveMistake({
+          type: 'exercise',
+          problem: selectedProblem.question,
+          topic: currentTask?.title || topicId,
+          attempts: 1,
+        });
+      } catch (error) {
+        console.error('Error saving mistake:', error);
+      }
     }
 
     const newCount = completedCount + 1;

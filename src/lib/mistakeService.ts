@@ -78,7 +78,7 @@ export const mistakeService = {
       .from('mistakes')
       .select(`
         *,
-        profiles!inner(id, full_name, email)
+        profiles(id, full_name, email)
       `)
       .in('user_id', linkedProfileIds);
 
