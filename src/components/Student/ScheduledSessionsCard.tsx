@@ -5,7 +5,7 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
-import { Calendar, Clock, Loader2, Video, Timer } from 'lucide-react';
+import { Calendar, Clock, Loader2, Timer } from 'lucide-react';
 import { format } from 'date-fns';
 
 interface ScheduledSession {
@@ -112,10 +112,13 @@ export function ScheduledSessionsCard() {
   };
 
   const handleJoinSession = (session: ScheduledSession) => {
-    // Store session info for context
+    // Store session info and ID for tracking
     if (session.topic) {
       localStorage.setItem('sessionTopic', session.topic);
     }
+    localStorage.setItem('sessionDuration', session.duration_minutes.toString());
+    localStorage.setItem('sessionStartTime', new Date().toISOString());
+    localStorage.setItem('activeSessionId', session.id);
     navigate('/exercice');
   };
 
@@ -197,7 +200,12 @@ export function ScheduledSessionsCard() {
       </CardHeader>
       <CardContent>
         <div className="space-y-3">
-          {sessions.map((session) => {
+          {sessions
+            .filter((session) => {
+              const countdown = getCountdownText(session.scheduled_date, session.scheduled_time);
+              return countdown.text !== 'Session Ended';
+            })
+            .map((session) => {
             const countdown = getCountdownText(session.scheduled_date, session.scheduled_time);
             return (
               <div
@@ -250,7 +258,6 @@ export function ScheduledSessionsCard() {
                         onClick={() => handleJoinSession(session)}
                         className="animate-pulse"
                       >
-                        <Video className="w-4 h-4 mr-1" />
                         Join Session
                       </Button>
                     )}
