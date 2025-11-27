@@ -67,16 +67,31 @@ serve(async (req) => {
     // Client with service role for admin operations
     const supabaseAdmin = createClient(supabaseUrl, supabaseServiceKey);
 
-    // Verify parent role
-    const { data: parentProfile, error: profileError } = await supabaseUser
+    // Verify parent role using service role client (bypasses RLS since we already validated the token)
+    console.log('Checking parent role for user:', parentUser.id);
+    const { data: parentProfile, error: profileError } = await supabaseAdmin
       .from('profiles')
       .select('role')
       .eq('id', parentUser.id)
       .single();
 
-    if (profileError || parentProfile?.role !== 'parent') {
+    console.log('Profile query result:', {
+      hasProfile: !!parentProfile,
+      role: parentProfile?.role,
+      error: profileError?.message
+    });
+
+    if (profileError) {
+      console.error('Error fetching profile:', profileError);
+      throw new Error(`Failed to verify parent status: ${profileError.message}`);
+    }
+
+    if (parentProfile?.role !== 'parent') {
+      console.error('User is not a parent, role:', parentProfile?.role);
       throw new Error('Only parents can create student accounts');
     }
+
+    console.log('Parent verification successful');
 
     // Parse request body
     const { name, email, password, gradeLevel } = await req.json();
