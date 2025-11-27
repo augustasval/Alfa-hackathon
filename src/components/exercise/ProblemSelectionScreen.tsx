@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { ArrowLeft, BookOpen, Camera, Upload, Loader2, X, Edit2, Check, Plus, Trash2 } from "lucide-react";
+import { ArrowLeft, BookOpen, Camera, Upload, Loader2, X, Edit2, Check, Plus, Trash2, CheckCircle2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -23,6 +23,7 @@ interface ExtractedStep {
 interface ProblemSelectionScreenProps {
   problems: Problem[];
   completedCount: number;
+  completedProblemIds?: string[];
   currentTaskTitle?: string;
   onProblemSelect: (problem: Problem) => void;
 }
@@ -30,6 +31,7 @@ interface ProblemSelectionScreenProps {
 export const ProblemSelectionScreen = ({
   problems,
   completedCount,
+  completedProblemIds = [],
   currentTaskTitle,
   onProblemSelect,
 }: ProblemSelectionScreenProps) => {
@@ -506,36 +508,47 @@ export const ProblemSelectionScreen = ({
                   </Badge>
                 </div>
                 <div className="space-y-2">
-                  {confirmedProblems.map((problem) => (
-                    <Card
-                      key={problem.id}
-                      className="p-4 border-2 border-transparent hover:border-purple-500/30"
-                    >
-                      <div className="flex items-start gap-3">
-                        <div 
-                          className="flex-1 cursor-pointer"
-                          onClick={() => onProblemSelect(problem)}
-                        >
-                          <div className="prose prose-sm max-w-none dark:prose-invert">
-                            <ReactMarkdown remarkPlugins={[remarkMath]} rehypePlugins={[rehypeKatex]}>
-                              {problem.question}
-                            </ReactMarkdown>
+                  {confirmedProblems.map((problem) => {
+                    const isCompleted = completedProblemIds.includes(problem.id);
+                    return (
+                      <Card
+                        key={problem.id}
+                        className={`p-4 border-2 border-transparent hover:border-purple-500/30 relative ${isCompleted ? 'bg-green-500/5' : ''}`}
+                      >
+                        <div className="flex items-start gap-3">
+                          <div 
+                            className="flex-1 cursor-pointer"
+                            onClick={() => onProblemSelect(problem)}
+                          >
+                            <div className="prose prose-sm max-w-none dark:prose-invert">
+                              <ReactMarkdown remarkPlugins={[remarkMath]} rehypePlugins={[rehypeKatex]}>
+                                {problem.question}
+                              </ReactMarkdown>
+                            </div>
                           </div>
+                          {isCompleted && (
+                            <div className="flex items-center gap-2">
+                              <Badge variant="secondary" className="bg-green-500/20 text-green-400 border-green-500/50">
+                                Done
+                              </Badge>
+                              <CheckCircle2 className="h-5 w-5 text-green-400" />
+                            </div>
+                          )}
+                          <Button
+                            size="icon"
+                            variant="ghost"
+                            className="text-destructive hover:text-destructive hover:bg-destructive/10"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleDeleteSavedProblem(problem.id);
+                            }}
+                          >
+                            <Trash2 className="h-4 w-4" />
+                          </Button>
                         </div>
-                        <Button
-                          size="icon"
-                          variant="ghost"
-                          className="text-destructive hover:text-destructive hover:bg-destructive/10"
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            handleDeleteSavedProblem(problem.id);
-                          }}
-                        >
-                          <Trash2 className="h-4 w-4" />
-                        </Button>
-                      </div>
-                    </Card>
-                  ))}
+                      </Card>
+                    );
+                  })}
                 </div>
               </div>
             )}
@@ -547,19 +560,32 @@ export const ProblemSelectionScreen = ({
                   <Badge className={getDifficultyColor('easy').badge}>Easy</Badge>
                 </div>
                 <div className="space-y-2">
-                  {easyProblems.map((problem) => (
-                    <Card
-                      key={problem.id}
-                      className={`p-4 cursor-pointer transition-all hover:scale-[1.01] hover:${getDifficultyColor('easy').bg} hover:${getDifficultyColor('easy').border} border-2 border-transparent`}
-                      onClick={() => onProblemSelect(problem)}
-                    >
-                      <div className="prose prose-sm max-w-none dark:prose-invert">
-                        <ReactMarkdown remarkPlugins={[remarkMath]} rehypePlugins={[rehypeKatex]}>
-                          {problem.question}
-                        </ReactMarkdown>
-                      </div>
-                    </Card>
-                  ))}
+                  {easyProblems.map((problem) => {
+                    const isCompleted = completedProblemIds.includes(problem.id);
+                    return (
+                      <Card
+                        key={problem.id}
+                        className={`p-4 cursor-pointer transition-all hover:scale-[1.01] hover:${getDifficultyColor('easy').bg} hover:${getDifficultyColor('easy').border} border-2 border-transparent relative ${isCompleted ? 'bg-green-500/5' : ''}`}
+                        onClick={() => onProblemSelect(problem)}
+                      >
+                        <div className="flex items-start gap-3">
+                          <div className="flex-1 prose prose-sm max-w-none dark:prose-invert">
+                            <ReactMarkdown remarkPlugins={[remarkMath]} rehypePlugins={[rehypeKatex]}>
+                              {problem.question}
+                            </ReactMarkdown>
+                          </div>
+                          {isCompleted && (
+                            <div className="flex items-center gap-2 flex-shrink-0">
+                              <Badge variant="secondary" className="bg-green-500/20 text-green-400 border-green-500/50">
+                                Done
+                              </Badge>
+                              <CheckCircle2 className="h-5 w-5 text-green-400" />
+                            </div>
+                          )}
+                        </div>
+                      </Card>
+                    );
+                  })}
                 </div>
               </div>
             )}
@@ -571,19 +597,32 @@ export const ProblemSelectionScreen = ({
                   <Badge className={getDifficultyColor('medium').badge}>Medium</Badge>
                 </div>
                 <div className="space-y-2">
-                  {mediumProblems.map((problem) => (
-                    <Card
-                      key={problem.id}
-                      className={`p-4 cursor-pointer transition-all hover:scale-[1.01] hover:${getDifficultyColor('medium').bg} hover:${getDifficultyColor('medium').border} border-2 border-transparent`}
-                      onClick={() => onProblemSelect(problem)}
-                    >
-                      <div className="prose prose-sm max-w-none dark:prose-invert">
-                        <ReactMarkdown remarkPlugins={[remarkMath]} rehypePlugins={[rehypeKatex]}>
-                          {problem.question}
-                        </ReactMarkdown>
-                      </div>
-                    </Card>
-                  ))}
+                  {mediumProblems.map((problem) => {
+                    const isCompleted = completedProblemIds.includes(problem.id);
+                    return (
+                      <Card
+                        key={problem.id}
+                        className={`p-4 cursor-pointer transition-all hover:scale-[1.01] hover:${getDifficultyColor('medium').bg} hover:${getDifficultyColor('medium').border} border-2 border-transparent relative ${isCompleted ? 'bg-green-500/5' : ''}`}
+                        onClick={() => onProblemSelect(problem)}
+                      >
+                        <div className="flex items-start gap-3">
+                          <div className="flex-1 prose prose-sm max-w-none dark:prose-invert">
+                            <ReactMarkdown remarkPlugins={[remarkMath]} rehypePlugins={[rehypeKatex]}>
+                              {problem.question}
+                            </ReactMarkdown>
+                          </div>
+                          {isCompleted && (
+                            <div className="flex items-center gap-2 flex-shrink-0">
+                              <Badge variant="secondary" className="bg-green-500/20 text-green-400 border-green-500/50">
+                                Done
+                              </Badge>
+                              <CheckCircle2 className="h-5 w-5 text-green-400" />
+                            </div>
+                          )}
+                        </div>
+                      </Card>
+                    );
+                  })}
                 </div>
               </div>
             )}
@@ -595,19 +634,32 @@ export const ProblemSelectionScreen = ({
                   <Badge className={getDifficultyColor('hard').badge}>Hard</Badge>
                 </div>
                 <div className="space-y-2">
-                  {hardProblems.map((problem) => (
-                    <Card
-                      key={problem.id}
-                      className={`p-4 cursor-pointer transition-all hover:scale-[1.01] hover:${getDifficultyColor('hard').bg} hover:${getDifficultyColor('hard').border} border-2 border-transparent`}
-                      onClick={() => onProblemSelect(problem)}
-                    >
-                      <div className="prose prose-sm max-w-none dark:prose-invert">
-                        <ReactMarkdown remarkPlugins={[remarkMath]} rehypePlugins={[rehypeKatex]}>
-                          {problem.question}
-                        </ReactMarkdown>
-                      </div>
-                    </Card>
-                  ))}
+                  {hardProblems.map((problem) => {
+                    const isCompleted = completedProblemIds.includes(problem.id);
+                    return (
+                      <Card
+                        key={problem.id}
+                        className={`p-4 cursor-pointer transition-all hover:scale-[1.01] hover:${getDifficultyColor('hard').bg} hover:${getDifficultyColor('hard').border} border-2 border-transparent relative ${isCompleted ? 'bg-green-500/5' : ''}`}
+                        onClick={() => onProblemSelect(problem)}
+                      >
+                        <div className="flex items-start gap-3">
+                          <div className="flex-1 prose prose-sm max-w-none dark:prose-invert">
+                            <ReactMarkdown remarkPlugins={[remarkMath]} rehypePlugins={[rehypeKatex]}>
+                              {problem.question}
+                            </ReactMarkdown>
+                          </div>
+                          {isCompleted && (
+                            <div className="flex items-center gap-2 flex-shrink-0">
+                              <Badge variant="secondary" className="bg-green-500/20 text-green-400 border-green-500/50">
+                                Done
+                              </Badge>
+                              <CheckCircle2 className="h-5 w-5 text-green-400" />
+                            </div>
+                          )}
+                        </div>
+                      </Card>
+                    );
+                  })}
                 </div>
               </div>
             )}
