@@ -127,6 +127,14 @@ const StudentDashboard = () => {
               <Button
                 variant="outline"
                 size="sm"
+                onClick={() => setShowOnboarding(true)}
+              >
+                <RefreshCw className="h-4 w-4 mr-2" />
+                Change Learning Plan
+              </Button>
+              <Button
+                variant="outline"
+                size="sm"
                 onClick={() => navigate('/pricing')}
               >
                 <CreditCard className="h-4 w-4 mr-2" />
@@ -155,14 +163,8 @@ const StudentDashboard = () => {
                   <h2 className="text-2xl font-bold">{plan.topic_name}</h2>
                   <p className="text-sm text-muted-foreground">Grade {plan.grade}</p>
                 </div>
-                <div className="flex items-center gap-3">
-                  <Button variant="outline" onClick={() => setShowOnboarding(true)}>
-                    <RefreshCw className="h-4 w-4 mr-2" />
-                    Change Plan
-                  </Button>
-                  <div className="text-right">
-                    <p className="text-3xl font-bold">{Math.round(progressPercentage)}%</p>
-                  </div>
+                <div className="text-right">
+                  <p className="text-3xl font-bold">{Math.round(progressPercentage)}%</p>
                 </div>
               </div>
 

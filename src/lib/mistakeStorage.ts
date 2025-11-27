@@ -29,6 +29,20 @@ export const mistakeStorage = {
   add(mistake: Omit<MistakeRecord, 'id' | 'date'>): void {
     try {
       const mistakes = this.getAll();
+      
+      // Check for recent duplicates (within 30 seconds)
+      const thirtySecondsAgo = new Date(Date.now() - 30000).toISOString();
+      const isDuplicate = mistakes.some(
+        m => m.problem === mistake.problem && 
+             m.type === mistake.type && 
+             m.date > thirtySecondsAgo
+      );
+      
+      if (isDuplicate) {
+        console.log('Skipping duplicate mistake:', mistake.problem);
+        return;
+      }
+      
       const newMistake: MistakeRecord = {
         ...mistake,
         id: `mistake-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,

@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -33,6 +33,7 @@ export const TheoryQuiz = ({ questions, onComplete, onReadTheory, onRetry }: The
   const [selectedAnswer, setSelectedAnswer] = useState<number | null>(null);
   const [userAnswers, setUserAnswers] = useState<(number | null)[]>(Array(questions.length).fill(null));
   const [showResults, setShowResults] = useState(false);
+  const hasSubmittedRef = useRef(false);
 
   const handleNextQuestion = () => {
     if (selectedAnswer === null) return;
@@ -47,6 +48,10 @@ export const TheoryQuiz = ({ questions, onComplete, onReadTheory, onRetry }: The
       // Always start with no selection on a new question
       setSelectedAnswer(null);
     } else {
+      // Prevent double submission
+      if (hasSubmittedRef.current) return;
+      hasSubmittedRef.current = true;
+
       // Quiz complete - show results
       const finalScore = newAnswers.reduce((score, answer, index) => {
         return score + (answer === questions[index].correctAnswer ? 1 : 0);
@@ -62,12 +67,13 @@ export const TheoryQuiz = ({ questions, onComplete, onReadTheory, onRetry }: The
       const topic = currentTask?.title || 'Quiz';
       
       newAnswers.forEach((answer, index) => {
-        if (answer !== questions[index].correctAnswer) {
+        // Type-safe comparison: ensure both are numbers
+        if (answer !== null && Number(answer) !== Number(questions[index].correctAnswer)) {
           mistakeStorage.add({
             type: 'quiz',
             problem: questions[index].question,
             topic,
-            userAnswer: answer !== null ? questions[index].options[answer] : 'No answer',
+            userAnswer: questions[index].options[answer],
             correctAnswer: questions[index].options[questions[index].correctAnswer],
           });
         }
