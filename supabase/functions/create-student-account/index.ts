@@ -21,6 +21,10 @@ serve(async (req) => {
       throw new Error('Missing authorization header');
     }
 
+    // Extract JWT token from "Bearer <token>" format
+    const token = authHeader.replace('Bearer ', '');
+    console.log('Token extracted, length:', token.length);
+
     // Verify environment variables
     const supabaseUrl = Deno.env.get('SUPABASE_URL');
     const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY');
@@ -37,17 +41,12 @@ serve(async (req) => {
       throw new Error('Server configuration error');
     }
 
-    // Client with service role for admin operations
-    const supabaseAdmin = createClient(supabaseUrl, supabaseServiceKey);
+    // Client with anon key for validating the JWT token
+    const supabaseUser = createClient(supabaseUrl, supabaseAnonKey);
 
-    // Client with user's auth for validation
-    const supabaseUser = createClient(supabaseUrl, supabaseAnonKey, {
-      global: { headers: { Authorization: authHeader } },
-    });
-
-    // Verify the parent is authenticated
-    console.log('Attempting to get user from auth header');
-    const { data: { user: parentUser }, error: authError } = await supabaseUser.auth.getUser();
+    // Verify the parent is authenticated by passing the token directly to getUser
+    console.log('Attempting to get user from JWT token');
+    const { data: { user: parentUser }, error: authError } = await supabaseUser.auth.getUser(token);
     
     console.log('Auth result:', {
       hasUser: !!parentUser,
@@ -64,6 +63,9 @@ serve(async (req) => {
       console.error('No user returned from getUser');
       throw new Error('Unauthorized: No user found');
     }
+
+    // Client with service role for admin operations
+    const supabaseAdmin = createClient(supabaseUrl, supabaseServiceKey);
 
     // Verify parent role
     const { data: parentProfile, error: profileError } = await supabaseUser
