@@ -11,23 +11,8 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Badge } from '@/components/ui/badge';
-import {
-  Users,
-  Plus,
-  Calendar,
-  GraduationCap,
-  Clock,
-  CalendarDays,
-  Link,
-  User,
-  Activity,
-  CheckCircle,
-  BookOpen,
-  TrendingUp,
-  CreditCard
-} from 'lucide-react';
+import { Users, Plus, Calendar, GraduationCap, Clock, CalendarDays, Link, User, Activity, CheckCircle, BookOpen, TrendingUp, CreditCard } from 'lucide-react';
 import { toast } from 'sonner';
-
 interface Student {
   id: string;
   name: string;
@@ -36,7 +21,6 @@ interface Student {
   linked_profile_id: string | null;
   created_at: string;
 }
-
 interface ScheduledSession {
   id: string;
   student_id: string;
@@ -48,7 +32,6 @@ interface ScheduledSession {
   status: string;
   created_at: string;
 }
-
 interface StudentActivity {
   studentId: string;
   linkedProfileId: string | null;
@@ -58,21 +41,18 @@ interface StudentActivity {
   currentTopic: string | null;
   streakDays: number;
 }
-
 export default function ParentDashboard() {
   const auth = useAuth();
   const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
   const profile = auth?.profile;
   const signOut = auth?.signOut;
-
   const [students, setStudents] = useState<Student[]>([]);
   const [scheduledSessions, setScheduledSessions] = useState<ScheduledSession[]>([]);
   const [studentActivities, setStudentActivities] = useState<StudentActivity[]>([]);
   const [showAddStudent, setShowAddStudent] = useState(false);
   const [showScheduleSession, setShowScheduleSession] = useState(false);
   const [selectedStudentId, setSelectedStudentId] = useState<string | null>(null);
-
   useEffect(() => {
     loadStudents();
     loadScheduledSessions();
@@ -92,40 +72,41 @@ export default function ParentDashboard() {
       toast.info('You already have an account! You have been signed in.');
       // Remove the query param to avoid showing the toast again on refresh
       searchParams.delete('info');
-      setSearchParams(searchParams, { replace: true });
+      setSearchParams(searchParams, {
+        replace: true
+      });
     }
   }, [searchParams, setSearchParams]);
-
   async function loadStudents() {
-    const { data, error } = await supabase
-      .from('students')
-      .select('*')
-      .order('created_at', { ascending: false });
-
+    const {
+      data,
+      error
+    } = await supabase.from('students').select('*').order('created_at', {
+      ascending: false
+    });
     if (error) {
       console.error('Error loading students:', error);
     } else {
       setStudents(data || []);
     }
   }
-
   async function loadScheduledSessions() {
-    const { data, error } = await supabase
-      .from('scheduled_sessions')
-      .select('*')
-      .order('scheduled_date', { ascending: true })
-      .order('scheduled_time', { ascending: true });
-
+    const {
+      data,
+      error
+    } = await supabase.from('scheduled_sessions').select('*').order('scheduled_date', {
+      ascending: true
+    }).order('scheduled_time', {
+      ascending: true
+    });
     if (error) {
       console.error('Error loading sessions:', error);
     } else {
       setScheduledSessions(data || []);
     }
   }
-
   async function loadStudentActivities() {
     const activities: StudentActivity[] = [];
-
     for (const student of students) {
       if (!student.linked_profile_id) {
         // Student not linked yet - no activity data available
@@ -136,44 +117,39 @@ export default function ParentDashboard() {
           totalTasksCompleted: 0,
           totalTasks: 0,
           currentTopic: null,
-          streakDays: 0,
+          streakDays: 0
         });
         continue;
       }
 
       // Get learning plans for this student (via session_id which matches their profile)
-      const { data: plans } = await supabase
-        .from('learning_plans')
-        .select('id, topic_name, updated_at')
-        .order('created_at', { ascending: false })
-        .limit(1);
+      const {
+        data: plans
+      } = await supabase.from('learning_plans').select('id, topic_name, updated_at').order('created_at', {
+        ascending: false
+      }).limit(1);
 
       // Get tasks for the student's plans
       let totalTasks = 0;
       let completedTasks = 0;
       let currentTopic: string | null = null;
       let lastActivityDate: string | null = null;
-
       if (plans && plans.length > 0) {
         currentTopic = plans[0].topic_name;
-
-        const { data: tasks } = await supabase
-          .from('learning_tasks')
-          .select('id, is_completed, created_at')
-          .eq('plan_id', plans[0].id);
-
+        const {
+          data: tasks
+        } = await supabase.from('learning_tasks').select('id, is_completed, created_at').eq('plan_id', plans[0].id);
         if (tasks) {
           totalTasks = tasks.length;
           completedTasks = tasks.filter(t => t.is_completed).length;
         }
 
         // Get latest task progress for last activity
-        const { data: progress } = await supabase
-          .from('task_progress')
-          .select('updated_at')
-          .order('updated_at', { ascending: false })
-          .limit(1);
-
+        const {
+          data: progress
+        } = await supabase.from('task_progress').select('updated_at').order('updated_at', {
+          ascending: false
+        }).limit(1);
         if (progress && progress.length > 0) {
           lastActivityDate = progress[0].updated_at;
         } else if (plans[0].updated_at) {
@@ -191,7 +167,6 @@ export default function ParentDashboard() {
           streakDays = 1; // Active today or yesterday
         }
       }
-
       activities.push({
         studentId: student.id,
         linkedProfileId: student.linked_profile_id,
@@ -199,40 +174,34 @@ export default function ParentDashboard() {
         totalTasksCompleted: completedTasks,
         totalTasks: totalTasks,
         currentTopic: currentTopic,
-        streakDays: streakDays,
+        streakDays: streakDays
       });
     }
-
     setStudentActivities(activities);
   }
-
   function handleStudentAdded() {
     setShowAddStudent(false);
     loadStudents();
   }
-
   function handleSessionScheduled() {
     setShowScheduleSession(false);
     setSelectedStudentId(null);
     loadScheduledSessions();
   }
-
   async function handleSignOut() {
     if (signOut) {
       await signOut();
       navigate('/');
     }
   }
-
-  return (
-    <div className="min-h-screen bg-gradient-to-b from-background to-secondary/20">
+  return <div className="min-h-screen bg-gradient-to-b from-background to-secondary/20">
       {/* Navigation */}
       <nav className="bg-card border-b border-border px-6 py-4 sticky top-0 z-50">
         <div className="max-w-7xl mx-auto flex justify-between items-center">
-          <div className="flex items-center gap-3">
-            <img src="/logo/logo.svg?v=2" alt="Jolvita Logo" className="h-10 w-10" />
-            <img src="/name/brand-name.svg?v=2" alt="Jolvita" className="h-12" />
-            <Badge variant="secondary" className="ml-2">Parent Portal</Badge>
+          <div className="flex items-center gap-2">
+            <img src="/logo/logo.svg?v=2" alt="Jolvita Logo" className="h-12 w-12" />
+            <img src="/name/brand-name.svg?v=2" alt="Jolvita" className="h-8" />
+            <Badge variant="secondary" className="ml-4">Parent Portal</Badge>
           </div>
           <div className="flex items-center gap-4">
             <Button variant="outline" size="sm" onClick={() => navigate('/pricing')}>
@@ -254,31 +223,20 @@ export default function ParentDashboard() {
                 <Users className="w-5 h-5 text-primary" />
                 My Students
               </CardTitle>
-              <Button
-                size="sm"
-                onClick={() => setShowAddStudent(true)}
-                className="bg-primary text-primary-foreground hover:bg-primary/90"
-              >
+              <Button size="sm" onClick={() => setShowAddStudent(true)} className="bg-primary text-primary-foreground hover:bg-primary/90">
                 <Plus className="w-4 h-4 mr-1" />
                 Add Student
               </Button>
             </CardHeader>
             <CardContent>
-              {students.length === 0 ? (
-                <div className="text-center py-8 text-muted-foreground">
+              {students.length === 0 ? <div className="text-center py-8 text-muted-foreground">
                   <Users className="w-12 h-12 mx-auto mb-4 text-muted-foreground/50" />
                   <p>No students yet.</p>
                   <p className="text-sm mt-1">Add your first student to get started.</p>
-                </div>
-              ) : (
-                <div className="space-y-3">
-                  {students.map((student) => {
-                    const activity = studentActivities.find(a => a.studentId === student.id);
-                    return (
-                      <div
-                        key={student.id}
-                        className="p-4 bg-background rounded-lg border border-border hover:shadow-md transition-shadow"
-                      >
+                </div> : <div className="space-y-3">
+                  {students.map(student => {
+                const activity = studentActivities.find(a => a.studentId === student.id);
+                return <div key={student.id} className="p-4 bg-background rounded-lg border border-border hover:shadow-md transition-shadow">
                         <div className="flex items-center justify-between mb-3">
                           <div className="flex items-start gap-3">
                             <div className="p-2 bg-primary/10 rounded-full">
@@ -287,32 +245,25 @@ export default function ParentDashboard() {
                             <div>
                               <div className="flex items-center gap-2">
                                 <span className="font-semibold text-foreground">{student.name}</span>
-                                {student.linked_profile_id && (
-                                  <Badge variant="outline" className="text-xs bg-primary/10 text-primary border-primary/20">
+                                {student.linked_profile_id && <Badge variant="outline" className="text-xs bg-primary/10 text-primary border-primary/20">
                                     <Link className="w-3 h-3 mr-1" />
                                     Linked
-                                  </Badge>
-                                )}
+                                  </Badge>}
                               </div>
                               <div className="text-sm text-muted-foreground">Grade {student.grade_level}</div>
                             </div>
                           </div>
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            onClick={() => {
-                              setSelectedStudentId(student.id);
-                              setShowScheduleSession(true);
-                            }}
-                          >
+                          <Button variant="outline" size="sm" onClick={() => {
+                      setSelectedStudentId(student.id);
+                      setShowScheduleSession(true);
+                    }}>
                             <Calendar className="w-4 h-4 mr-1" />
                             Schedule
                           </Button>
                         </div>
 
                         {/* Activity Section */}
-                        {student.linked_profile_id ? (
-                          <div className="mt-3 pt-3 border-t border-border">
+                        {student.linked_profile_id ? <div className="mt-3 pt-3 border-t border-border">
                             <div className="grid grid-cols-3 gap-3">
                               {/* Last Activity */}
                               <div className="flex items-center gap-2">
@@ -320,9 +271,7 @@ export default function ParentDashboard() {
                                 <div>
                                   <div className="text-xs text-muted-foreground">Last Active</div>
                                   <div className="text-sm font-medium text-foreground">
-                                    {activity?.lastActivity
-                                      ? new Date(activity.lastActivity).toLocaleDateString()
-                                      : 'No activity'}
+                                    {activity?.lastActivity ? new Date(activity.lastActivity).toLocaleDateString() : 'No activity'}
                                   </div>
                                 </div>
                               </div>
@@ -351,34 +300,26 @@ export default function ParentDashboard() {
                             </div>
 
                             {/* Progress Bar */}
-                            {activity && activity.totalTasks > 0 && (
-                              <div className="mt-3">
+                            {activity && activity.totalTasks > 0 && <div className="mt-3">
                                 <div className="flex justify-between text-xs text-muted-foreground mb-1">
                                   <span>Progress</span>
-                                  <span>{Math.round((activity.totalTasksCompleted / activity.totalTasks) * 100)}%</span>
+                                  <span>{Math.round(activity.totalTasksCompleted / activity.totalTasks * 100)}%</span>
                                 </div>
                                 <div className="w-full bg-secondary rounded-full h-2">
-                                  <div
-                                    className="bg-primary h-2 rounded-full transition-all"
-                                    style={{ width: `${(activity.totalTasksCompleted / activity.totalTasks) * 100}%` }}
-                                  />
+                                  <div className="bg-primary h-2 rounded-full transition-all" style={{
+                          width: `${activity.totalTasksCompleted / activity.totalTasks * 100}%`
+                        }} />
                                 </div>
-                              </div>
-                            )}
-                          </div>
-                        ) : (
-                          <div className="mt-3 pt-3 border-t border-border">
+                              </div>}
+                          </div> : <div className="mt-3 pt-3 border-t border-border">
                             <div className="flex items-center gap-2 text-sm text-muted-foreground">
                               <Activity className="w-4 h-4" />
                               <span>Activity will appear once student links their account</span>
                             </div>
-                          </div>
-                        )}
-                      </div>
-                    );
-                  })}
-                </div>
-              )}
+                          </div>}
+                      </div>;
+              })}
+                </div>}
             </CardContent>
           </Card>
 
@@ -391,24 +332,14 @@ export default function ParentDashboard() {
               </CardTitle>
             </CardHeader>
             <CardContent>
-              {scheduledSessions.filter(s => s.status === 'scheduled').length === 0 ? (
-                <div className="text-center py-8 text-muted-foreground">
+              {scheduledSessions.filter(s => s.status === 'scheduled').length === 0 ? <div className="text-center py-8 text-muted-foreground">
                   <CalendarDays className="w-12 h-12 mx-auto mb-4 text-muted-foreground/50" />
                   <p>No upcoming sessions scheduled.</p>
                   <p className="text-sm mt-1">Schedule a session for your student.</p>
-                </div>
-              ) : (
-                <div className="space-y-3">
-                  {scheduledSessions
-                    .filter(s => s.status === 'scheduled')
-                    .slice(0, 5)
-                    .map((session) => {
-                      const student = students.find(s => s.id === session.student_id);
-                      return (
-                        <div
-                          key={session.id}
-                          className="p-4 bg-primary/5 rounded-lg border border-primary/20"
-                        >
+                </div> : <div className="space-y-3">
+                  {scheduledSessions.filter(s => s.status === 'scheduled').slice(0, 5).map(session => {
+                const student = students.find(s => s.id === session.student_id);
+                return <div key={session.id} className="p-4 bg-primary/5 rounded-lg border border-primary/20">
                           <div className="font-semibold text-foreground">{student?.name}</div>
                           <div className="text-sm text-muted-foreground mt-1">
                             {session.topic || 'Practice Session'}
@@ -426,11 +357,9 @@ export default function ParentDashboard() {
                               {session.duration_minutes} min
                             </Badge>
                           </div>
-                        </div>
-                      );
-                    })}
-                </div>
-              )}
+                        </div>;
+              })}
+                </div>}
             </CardContent>
           </Card>
         </div>
@@ -448,10 +377,7 @@ export default function ParentDashboard() {
           <DialogHeader>
             <DialogTitle>Add New Student</DialogTitle>
           </DialogHeader>
-          <AddStudentForm
-            onSuccess={handleStudentAdded}
-            onCancel={() => setShowAddStudent(false)}
-          />
+          <AddStudentForm onSuccess={handleStudentAdded} onCancel={() => setShowAddStudent(false)} />
         </DialogContent>
       </Dialog>
 
@@ -461,17 +387,11 @@ export default function ParentDashboard() {
           <DialogHeader>
             <DialogTitle>Schedule Practice Session</DialogTitle>
           </DialogHeader>
-          <ScheduleSessionForm
-            students={students}
-            selectedStudentId={selectedStudentId}
-            onSuccess={handleSessionScheduled}
-            onCancel={() => {
-              setShowScheduleSession(false);
-              setSelectedStudentId(null);
-            }}
-          />
+          <ScheduleSessionForm students={students} selectedStudentId={selectedStudentId} onSuccess={handleSessionScheduled} onCancel={() => {
+          setShowScheduleSession(false);
+          setSelectedStudentId(null);
+        }} />
         </DialogContent>
       </Dialog>
-    </div>
-  );
+    </div>;
 }
