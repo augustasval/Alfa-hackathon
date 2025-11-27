@@ -130,25 +130,7 @@ serve(async (req) => {
     }
 
     console.log('Created auth user:', authData.user.id);
-
-    // Create profile for the student
-    const { error: profileInsertError } = await supabaseAdmin
-      .from('profiles')
-      .insert({
-        id: authData.user.id,
-        email: email.toLowerCase().trim(),
-        full_name: name,
-        role: 'student',
-      });
-
-    if (profileInsertError) {
-      console.error('Error creating profile:', profileInsertError);
-      // Try to clean up the auth user if profile creation fails
-      await supabaseAdmin.auth.admin.deleteUser(authData.user.id);
-      throw new Error(`Failed to create student profile: ${profileInsertError.message}`);
-    }
-
-    console.log('Created profile for student:', authData.user.id);
+    console.log('Profile will be created automatically by database trigger');
 
     // Create student entry linked to parent
     const { error: studentInsertError } = await supabaseAdmin
@@ -162,8 +144,7 @@ serve(async (req) => {
 
     if (studentInsertError) {
       console.error('Error creating student entry:', studentInsertError);
-      // Clean up profile and auth user if student entry creation fails
-      await supabaseAdmin.from('profiles').delete().eq('id', authData.user.id);
+      // Clean up auth user (profile will be deleted via cascade)
       await supabaseAdmin.auth.admin.deleteUser(authData.user.id);
       throw new Error(`Failed to link student to parent: ${studentInsertError.message}`);
     }
