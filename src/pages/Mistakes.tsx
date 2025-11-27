@@ -1,7 +1,8 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
-import { AlertCircle, TrendingUp, Target, XCircle, BarChart3, Calendar, Lightbulb, TrendingDown, LogOut, CreditCard } from "lucide-react";
+import { AlertCircle, TrendingUp, Target, XCircle, BarChart3, Calendar, Lightbulb, TrendingDown, CreditCard } from "lucide-react";
+import { AccountSwitcher } from "@/components/AccountSwitcher";
 import { Navigation } from "@/components/Navigation";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -18,15 +19,10 @@ import { mistakeService, type Mistake } from "@/lib/mistakeService";
 
 const Mistakes = () => {
   const navigate = useNavigate();
-  const { profile, signOut } = useAuth();
+  const { profile } = useAuth();
   const [mistakes, setMistakes] = useState<Mistake[]>([]);
   const [topicStats, setTopicStats] = useState<Record<string, number>>({});
   const [loading, setLoading] = useState(true);
-
-  async function handleSignOut() {
-    await signOut();
-    navigate('/');
-  }
 
   const loadMistakes = async () => {
     try {
@@ -156,14 +152,7 @@ const Mistakes = () => {
                 <CreditCard className="h-4 w-4 mr-2" />
                 Plans
               </Button>
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={handleSignOut}
-              >
-                <LogOut className="h-4 w-4 mr-2" />
-                Sign Out
-              </Button>
+              <AccountSwitcher />
             </div>
           </div>
 
