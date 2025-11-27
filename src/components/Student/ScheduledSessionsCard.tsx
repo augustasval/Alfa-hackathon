@@ -42,18 +42,23 @@ export function ScheduledSessionsCard() {
     return () => clearInterval(interval);
   }, []);
 
-  // Check if a session is within 15 minutes of start time
+  // Check if a session is joinable (15 min before to 30 min after start)
   const isWithin15Minutes = (scheduledDate: string, scheduledTime: string): boolean => {
-    const [hours, minutes] = scheduledTime.split(':').map(Number);
-    const sessionDateTime = new Date(scheduledDate);
-    sessionDateTime.setHours(hours, minutes, 0, 0);
+    // Parse time components (handles "HH:MM" or "HH:MM:SS" format)
+    const timeParts = scheduledTime.split(':');
+    const hours = parseInt(timeParts[0], 10);
+    const minutes = parseInt(timeParts[1], 10);
     
-    const now = currentTime;
+    // Create date from parts to avoid UTC/local timezone confusion
+    const [year, month, day] = scheduledDate.split('-').map(Number);
+    const sessionDateTime = new Date(year, month - 1, day, hours, minutes, 0, 0);
+    
+    const now = new Date(); // Use fresh current time
     const diffMs = sessionDateTime.getTime() - now.getTime();
     const diffMinutes = diffMs / (1000 * 60);
     
-    // Within 15 minutes before start
-    return diffMinutes >= -5 && diffMinutes <= 15;
+    // Allow joining from 15 minutes before until 30 minutes after start
+    return diffMinutes >= -30 && diffMinutes <= 15;
   };
 
   const handleJoinSession = (session: ScheduledSession) => {
