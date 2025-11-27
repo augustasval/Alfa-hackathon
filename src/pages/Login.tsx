@@ -7,6 +7,7 @@ import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Loader2, BookOpen, Users } from 'lucide-react';
 
 export default function Login() {
@@ -16,6 +17,7 @@ export default function Login() {
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
   const [showEmailConfirmation, setShowEmailConfirmation] = useState(false);
+  const [registrationRole, setRegistrationRole] = useState<'parent' | 'student'>('parent');
 
   const { user, profile, loading: authLoading, signIn, signUp, signInWithGoogle } = useAuth();
   const navigate = useNavigate();
@@ -72,8 +74,7 @@ export default function Login() {
     try {
       // Use email as fullName by default, or user can provide their own
       const fullName = email.split('@')[0];
-      // Always register as parent - students are created by parents
-      const { needsEmailConfirmation } = await signUp(email, password, fullName, 'parent');
+      const { needsEmailConfirmation } = await signUp(email, password, fullName, registrationRole);
       if (needsEmailConfirmation) {
         setShowEmailConfirmation(true);
       }
@@ -88,8 +89,7 @@ export default function Login() {
     setError('');
     setLoading(true);
     try {
-      // Always register as parent - students are created by parents
-      await signInWithGoogle('parent');
+      await signInWithGoogle(registrationRole);
     } catch (err: unknown) {
       setError(err instanceof Error ? err.message : 'Failed to sign in with Google');
       setLoading(false);
@@ -291,13 +291,54 @@ export default function Login() {
               </form>
             ) : (
               <form onSubmit={handleRegister} className="space-y-4">
-                <Alert className="bg-blue-50 border-blue-200">
-                  <AlertDescription className="text-sm text-blue-800">
-                    <strong>Parents:</strong> Create your account here. After registration, you can create student accounts for your children.
-                    <br />
-                    <strong className="mt-2 block">Students:</strong> Ask your parent for login credentials.
-                  </AlertDescription>
-                </Alert>
+                {/* Role Selection */}
+                <div className="space-y-3">
+                  <Label className="text-base font-semibold">How will you use Jolvita?</Label>
+                  <RadioGroup
+                    value={registrationRole}
+                    onValueChange={(value) => setRegistrationRole(value as 'parent' | 'student')}
+                    className="grid grid-cols-2 gap-3"
+                  >
+                    <div className="relative">
+                      <RadioGroupItem
+                        value="parent"
+                        id="role-parent"
+                        className="peer sr-only"
+                      />
+                      <Label
+                        htmlFor="role-parent"
+                        className="flex flex-col items-center justify-center gap-2 rounded-lg border-2 border-border bg-background p-4 hover:bg-accent hover:text-accent-foreground peer-data-[state=checked]:border-primary peer-data-[state=checked]:bg-primary/5 cursor-pointer transition-all"
+                      >
+                        <Users className="h-6 w-6" />
+                        <div className="text-center">
+                          <div className="font-semibold">Parent</div>
+                          <div className="text-xs text-muted-foreground mt-1">
+                            Manage students & track progress
+                          </div>
+                        </div>
+                      </Label>
+                    </div>
+                    <div className="relative">
+                      <RadioGroupItem
+                        value="student"
+                        id="role-student"
+                        className="peer sr-only"
+                      />
+                      <Label
+                        htmlFor="role-student"
+                        className="flex flex-col items-center justify-center gap-2 rounded-lg border-2 border-border bg-background p-4 hover:bg-accent hover:text-accent-foreground peer-data-[state=checked]:border-primary peer-data-[state=checked]:bg-primary/5 cursor-pointer transition-all"
+                      >
+                        <BookOpen className="h-6 w-6" />
+                        <div className="text-center">
+                          <div className="font-semibold">Student</div>
+                          <div className="text-xs text-muted-foreground mt-1">
+                            Start learning immediately
+                          </div>
+                        </div>
+                      </Label>
+                    </div>
+                  </RadioGroup>
+                </div>
 
                 <div className="space-y-2">
                   <Label htmlFor="register-email">Email</Label>
@@ -341,7 +382,7 @@ export default function Login() {
                       Creating account...
                     </>
                   ) : (
-                    'Create Parent Account'
+                    `Create ${registrationRole === 'parent' ? 'Parent' : 'Student'} Account`
                   )}
                 </Button>
 
