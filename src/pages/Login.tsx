@@ -184,8 +184,8 @@ export default function Login() {
         {/* Header */}
         <div className="text-center mb-8">
           <div className="flex items-center justify-center gap-3 mb-4">
-            <img src="/logo/logo.svg" alt="Jolvita Logo" className="h-12 w-12" />
-            <img src="/name/brand-name.svg" alt="Jolvita" className="h-8" />
+            <img src="/logo/logo.svg" alt="Solvita Logo" className="h-12 w-12" />
+            <img src="/name/brand-name.svg" alt="Solvita" className="h-8" />
           </div>
           <p className="text-muted-foreground mt-2">Your personal AI math tutor</p>
         </div>
@@ -293,7 +293,7 @@ export default function Login() {
               <form onSubmit={handleRegister} className="space-y-4">
                 {/* Role Selection */}
                 <div className="space-y-3">
-                  <Label className="text-base font-semibold">How will you use Jolvita?</Label>
+                  <Label className="text-base font-semibold">How will you use Solvita?</Label>
                   <RadioGroup
                     value={registrationRole}
                     onValueChange={(value) => setRegistrationRole(value as 'parent' | 'student')}

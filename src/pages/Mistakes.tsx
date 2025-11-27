@@ -140,8 +140,8 @@ const Mistakes = () => {
           {/* Header */}
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
-              <img src="/logo/logo.svg" alt="Jolvita Logo" className="h-12 w-12" />
-              <img src="/name/brand-name.svg" alt="Jolvita" className="h-8" />
+              <img src="/logo/logo.svg" alt="Solvita Logo" className="h-12 w-12" />
+              <img src="/name/brand-name.svg" alt="Solvita" className="h-8" />
             </div>
             <div className="flex items-center gap-2">
               <Button

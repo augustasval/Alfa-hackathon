@@ -45,7 +45,7 @@ const LogoProcessor = () => {
         <Card className="p-6">
           <h1 className="text-2xl font-bold mb-4">Logo Background Remover</h1>
           <p className="text-muted-foreground mb-6">
-            Process the Jolvita logos to remove white backgrounds
+            Process the Solvita logos to remove white backgrounds
           </p>
 
           <Button onClick={processLogos} disabled={processing} className="mb-6">
