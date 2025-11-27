@@ -52,9 +52,9 @@ export function StudentMistakesView() {
   const getTypeColor = (type: string) => {
     switch (type) {
       case 'quiz': return 'bg-blue-500/10 text-blue-500 border-blue-500/20';
-      case 'exercise': return 'bg-purple-500/10 text-purple-500 border-purple-500/20';
+      case 'exercise': return 'bg-primary/10 text-primary border-primary/20';
       case 'practice': return 'bg-green-500/10 text-green-500 border-green-500/20';
-      default: return 'bg-gray-500/10 text-gray-500 border-gray-500/20';
+      default: return 'bg-muted text-muted-foreground border-border';
     }
   };
 

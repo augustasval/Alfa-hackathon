@@ -5,6 +5,7 @@ import { Progress } from "@/components/ui/progress";
 import { Badge } from "@/components/ui/badge";
 import { OnboardingModal } from "@/components/OnboardingModal";
 import { Navigation } from "@/components/Navigation";
+import { ScheduledSessionsCard } from "@/components/Student/ScheduledSessionsCard";
 import { useLearningPlan } from "@/hooks/useLearningPlan";
 import { useAuth } from "@/contexts/AuthContext";
 import { useNavigate, useSearchParams } from "react-router-dom";
@@ -156,6 +157,9 @@ const StudentDashboard = () => {
 
           {/* Dashboard Content */}
           <div className="space-y-6">
+            {/* Scheduled Sessions */}
+            <ScheduledSessionsCard />
+
             {/* Progress Summary */}
             <Card className="p-6 border-primary/20">
               <div className="flex items-start justify-between mb-4">

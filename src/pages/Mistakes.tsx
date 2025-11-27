@@ -14,52 +14,99 @@ import ReactMarkdown from "react-markdown";
 import remarkMath from "remark-math";
 import rehypeKatex from "rehype-katex";
 import "katex/dist/katex.min.css";
-import { mistakeStorage, MistakeRecord } from "@/lib/mistakeStorage";
+import { mistakeService, type Mistake } from "@/lib/mistakeService";
 
 const Mistakes = () => {
   const navigate = useNavigate();
   const { profile, signOut } = useAuth();
-  const [mistakes, setMistakes] = useState<MistakeRecord[]>([]);
+  const [mistakes, setMistakes] = useState<Mistake[]>([]);
   const [topicStats, setTopicStats] = useState<Record<string, number>>({});
+  const [loading, setLoading] = useState(true);
 
   async function handleSignOut() {
     await signOut();
     navigate('/');
   }
 
-  const loadMistakes = () => {
-    const loadedMistakes = mistakeStorage.getAll();
-    setMistakes(loadedMistakes);
+  const loadMistakes = async () => {
+    try {
+      setLoading(true);
+      const loadedMistakes = await mistakeService.getMistakes();
+      setMistakes(loadedMistakes);
 
-    // Calculate topic statistics
-    const stats: Record<string, number> = {};
-    loadedMistakes.forEach((mistake) => {
-      stats[mistake.topic] = (stats[mistake.topic] || 0) + 1;
-    });
-    setTopicStats(stats);
+      // Calculate topic statistics
+      const stats: Record<string, number> = {};
+      loadedMistakes.forEach((mistake) => {
+        stats[mistake.topic] = (stats[mistake.topic] || 0) + 1;
+      });
+      setTopicStats(stats);
+    } catch (error) {
+      console.error('Error loading mistakes:', error);
+    } finally {
+      setLoading(false);
+    }
   };
 
   useEffect(() => {
     loadMistakes();
   }, []);
 
-  const handleDeleteMistake = (id: string) => {
-    mistakeStorage.delete(id);
-    loadMistakes();
+  const handleDeleteMistake = async (id: string) => {
+    try {
+      await mistakeService.deleteMistake(id);
+      await loadMistakes();
+    } catch (error) {
+      console.error('Error deleting mistake:', error);
+    }
   };
 
   // Calculate enhanced statistics
-  const thisWeekMistakes = mistakeStorage.getFromLastDays(7).length;
-  const improvementRate = mistakeStorage.getImprovementRate();
-  const daysSinceLastMistake = mistakeStorage.getDaysSinceLastMistake();
-  const patterns = mistakeStorage.analyzeExercisePatterns();
-  const chartData = mistakeStorage.getDailyMistakeCounts(14);
+  const thisWeekMistakes = mistakes.filter(m => {
+    if (!m.created_at) return false;
+    const mistakeDate = new Date(m.created_at);
+    const sevenDaysAgo = new Date();
+    sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
+    return mistakeDate >= sevenDaysAgo;
+  }).length;
+  
+  const lastWeekMistakes = mistakes.filter(m => {
+    if (!m.created_at) return false;
+    const mistakeDate = new Date(m.created_at);
+    const fourteenDaysAgo = new Date();
+    fourteenDaysAgo.setDate(fourteenDaysAgo.getDate() - 14);
+    const sevenDaysAgo = new Date();
+    sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
+    return mistakeDate >= fourteenDaysAgo && mistakeDate < sevenDaysAgo;
+  }).length;
+  
+  const improvementRate = {
+    percentChange: lastWeekMistakes > 0 ? ((lastWeekMistakes - thisWeekMistakes) / lastWeekMistakes) * 100 : 0
+  };
+  
+  const daysSinceLastMistake = mistakes.length > 0 && mistakes[0].created_at
+    ? Math.floor((new Date().getTime() - new Date(mistakes[0].created_at).getTime()) / (1000 * 60 * 60 * 24))
+    : 0;
+  
+  const exerciseMistakes = mistakes.filter(m => m.type === 'exercise');
+  const patterns = { commonStepKeywords: [] as any[] };
+  
+  const chartData = Array.from({ length: 14 }, (_, i) => {
+    const date = new Date();
+    date.setDate(date.getDate() - (13 - i));
+    const dateStr = date.toISOString().split('T')[0];
+    const dayMistakes = mistakes.filter(m => m.created_at?.startsWith(dateStr));
+    return {
+      date: dateStr,
+      quiz: dayMistakes.filter(m => m.type === 'quiz').length,
+      exercise: dayMistakes.filter(m => m.type === 'exercise').length,
+      practice: dayMistakes.filter(m => m.type === 'practice').length,
+    };
+  });
   
   const mostChallengingTopic = Object.entries(topicStats).sort((a, b) => b[1] - a[1])[0];
   const mostCommonErrorType = patterns.commonStepKeywords[0]?.keyword || "None detected";
   
   const quizMistakes = mistakes.filter(m => m.type === 'quiz');
-  const exerciseMistakes = mistakes.filter(m => m.type === 'exercise');
   const practiceMistakes = mistakes.filter(m => m.type === 'practice');
 
   // Generate recommendations
@@ -340,8 +387,8 @@ const Mistakes = () => {
   );
 };
 
-const MistakeCard = ({ mistake, onDelete }: { mistake: MistakeRecord; onDelete: (id: string) => void }) => {
-  const getBadgeVariant = (type: MistakeRecord['type']) => {
+const MistakeCard = ({ mistake, onDelete }: { mistake: Mistake; onDelete: (id: string) => void }) => {
+  const getBadgeVariant = (type: Mistake['type']) => {
     switch (type) {
       case 'quiz': return 'destructive';
       case 'exercise': return 'default';
@@ -349,7 +396,8 @@ const MistakeCard = ({ mistake, onDelete }: { mistake: MistakeRecord; onDelete: 
     }
   };
 
-  const getTimeAgo = (date: string) => {
+  const getTimeAgo = (date: string | undefined) => {
+    if (!date) return 'Unknown';
     const now = new Date();
     const mistakeDate = new Date(date);
     const diffDays = Math.floor((now.getTime() - mistakeDate.getTime()) / (1000 * 60 * 60 * 24));
@@ -367,13 +415,13 @@ const MistakeCard = ({ mistake, onDelete }: { mistake: MistakeRecord; onDelete: 
         <div className="flex gap-2 flex-wrap">
           <Badge variant={getBadgeVariant(mistake.type)}>{mistake.type}</Badge>
           <Badge variant="outline">{mistake.topic}</Badge>
-          <Badge variant="secondary" className="text-xs">{getTimeAgo(mistake.date)}</Badge>
+          <Badge variant="secondary" className="text-xs">{getTimeAgo(mistake.created_at)}</Badge>
         </div>
         <Button
           variant="ghost"
           size="icon"
           className="h-6 w-6 shrink-0"
-          onClick={() => onDelete(mistake.id)}
+          onClick={() => mistake.id && onDelete(mistake.id)}
         >
           <XCircle className="h-4 w-4" />
         </Button>
@@ -387,40 +435,22 @@ const MistakeCard = ({ mistake, onDelete }: { mistake: MistakeRecord; onDelete: 
 
       {mistake.type === 'quiz' && (
         <div className="space-y-2 mt-3">
-          <div className="p-2 bg-destructive/10 border border-destructive/20 rounded">
-            <p className="text-sm">
-              <span className="font-medium">Your answer:</span>{' '}
-              <span className="text-destructive">{mistake.userAnswer}</span>
-            </p>
-          </div>
-          <div className="p-2 bg-green-500/10 border border-green-500/20 rounded">
-            <p className="text-sm">
-              <span className="font-medium">Correct answer:</span>{' '}
-              <span className="text-green-600 dark:text-green-500">{mistake.correctAnswer}</span>
-            </p>
-          </div>
-        </div>
-      )}
-
-      {mistake.type === 'exercise' && mistake.stepDetails && mistake.stepDetails.length > 0 && (
-        <div className="mt-3 space-y-2">
-          <p className="text-sm font-medium">Steps where you struggled:</p>
-          <div className="space-y-2">
-            {mistake.stepDetails.map((detail, idx) => {
-              const stepNum = mistake.incorrectSteps?.[idx] ?? idx;
-              return (
-                <div key={idx} className="p-2 bg-muted rounded text-sm">
-                  <p className="font-medium text-destructive mb-1">Step {stepNum + 1}</p>
-                  <div className="prose prose-sm dark:prose-invert mb-1">
-                    <ReactMarkdown remarkPlugins={[remarkMath]} rehypePlugins={[rehypeKatex]}>
-                      {detail.step}
-                    </ReactMarkdown>
-                  </div>
-                  <p className="text-xs text-muted-foreground italic">{detail.explanation}</p>
-                </div>
-              );
-            })}
-          </div>
+          {mistake.user_answer && (
+            <div className="p-2 bg-destructive/10 border border-destructive/20 rounded">
+              <p className="text-sm">
+                <span className="font-medium">Your answer:</span>{' '}
+                <span className="text-destructive">{mistake.user_answer}</span>
+              </p>
+            </div>
+          )}
+          {mistake.correct_answer && (
+            <div className="p-2 bg-green-500/10 border border-green-500/20 rounded">
+              <p className="text-sm">
+                <span className="font-medium">Correct answer:</span>{' '}
+                <span className="text-green-600 dark:text-green-500">{mistake.correct_answer}</span>
+              </p>
+            </div>
+          )}
         </div>
       )}
 

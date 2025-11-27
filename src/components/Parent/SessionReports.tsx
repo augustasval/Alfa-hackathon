@@ -80,7 +80,7 @@ export default function SessionReports({ students }: SessionReportsProps) {
     return (
       <Card>
         <CardContent className="flex items-center justify-center py-12">
-          <Loader2 className="w-8 h-8 animate-spin text-purple-500" />
+          <Loader2 className="w-8 h-8 animate-spin text-primary" />
         </CardContent>
       </Card>
     );
@@ -90,14 +90,14 @@ export default function SessionReports({ students }: SessionReportsProps) {
     <Card>
       <CardHeader>
         <CardTitle className="flex items-center gap-2">
-          <TrendingUp className="w-5 h-5 text-purple-500" />
+          <TrendingUp className="w-5 h-5 text-primary" />
           Recent Session Reports
         </CardTitle>
       </CardHeader>
       <CardContent>
         {reports.length === 0 ? (
-          <div className="text-center py-12 text-gray-500">
-            <TrendingUp className="w-12 h-12 mx-auto mb-4 text-gray-300" />
+          <div className="text-center py-12 text-muted-foreground">
+            <TrendingUp className="w-12 h-12 mx-auto mb-4 text-muted-foreground/50" />
             <p>No completed sessions yet.</p>
             <p className="text-sm mt-1">Reports will appear here after your student completes a session.</p>
           </div>
@@ -110,46 +110,46 @@ export default function SessionReports({ students }: SessionReportsProps) {
               return (
                 <div
                   key={report.id}
-                  className="p-5 bg-gray-50 rounded-lg border border-gray-200"
+                  className="p-5 bg-muted/50 rounded-lg border border-border"
                 >
                   {/* Header */}
                   <div className="flex justify-between items-start mb-4">
                     <div>
-                      <h3 className="text-lg font-semibold">{student?.name}</h3>
-                      <p className="text-sm text-gray-500">
+                      <h3 className="text-lg font-semibold text-foreground">{student?.name}</h3>
+                      <p className="text-sm text-muted-foreground">
                         {report.session?.created_at && new Date(report.session.created_at).toLocaleDateString()} at{' '}
                         {report.session?.created_at && new Date(report.session.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                       </p>
-                      <p className="text-sm text-gray-500 flex items-center gap-1">
+                      <p className="text-sm text-muted-foreground flex items-center gap-1">
                         <Clock className="w-3 h-3" />
                         Duration: {sessionDuration} minutes
                       </p>
                     </div>
-                    <Badge className="bg-purple-100 text-purple-700 hover:bg-purple-100">
+                    <Badge className="bg-primary/10 text-primary hover:bg-primary/10">
                       {report.accuracy_percentage || 0}% accuracy
                     </Badge>
                   </div>
 
                   {/* Topic */}
                   <div className="mb-4">
-                    <div className="text-sm font-medium text-gray-600 mb-1">Topic:</div>
-                    <div className="text-gray-800">{report.session?.topic || 'General Practice'}</div>
+                    <div className="text-sm font-medium text-muted-foreground mb-1">Topic:</div>
+                    <div className="text-foreground">{report.session?.topic || 'General Practice'}</div>
                   </div>
 
                   {/* Summary */}
                   <div className="mb-4">
-                    <div className="text-sm font-medium text-gray-600 mb-1">Summary:</div>
-                    <div className="text-sm text-gray-700">{report.summary || report.report_content}</div>
+                    <div className="text-sm font-medium text-muted-foreground mb-1">Summary:</div>
+                    <div className="text-sm text-foreground">{report.summary || report.report_content}</div>
                   </div>
 
                   {/* Key Insights */}
                   {report.key_insights && report.key_insights.length > 0 && (
                     <div className="mb-3">
-                      <div className="text-sm font-medium text-gray-600 mb-1 flex items-center gap-1">
+                      <div className="text-sm font-medium text-muted-foreground mb-1 flex items-center gap-1">
                         <Lightbulb className="w-3 h-3 text-yellow-500" />
                         Key Insights:
                       </div>
-                      <ul className="text-sm text-gray-600 list-disc list-inside">
+                      <ul className="text-sm text-muted-foreground list-disc list-inside">
                         {report.key_insights.map((insight, idx) => (
                           <li key={idx}>{insight}</li>
                         ))}
@@ -160,8 +160,8 @@ export default function SessionReports({ students }: SessionReportsProps) {
                   {/* Recommendations */}
                   {report.recommendations && report.recommendations.length > 0 && (
                     <div>
-                      <div className="text-sm font-medium text-gray-600 mb-1">Recommendations:</div>
-                      <ul className="text-sm text-gray-600 list-disc list-inside">
+                      <div className="text-sm font-medium text-muted-foreground mb-1">Recommendations:</div>
+                      <ul className="text-sm text-muted-foreground list-disc list-inside">
                         {report.recommendations.map((rec, idx) => (
                           <li key={idx}>{rec}</li>
                         ))}
