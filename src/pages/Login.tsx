@@ -184,8 +184,7 @@ export default function Login() {
         {/* Header */}
         <div className="text-center mb-8">
           <div className="flex items-center justify-center gap-3 mb-4">
-            <img src="/logo/logo.png" alt="Jolvita Logo" className="h-14 w-14" />
-            <img src="/name/brand-name.png" alt="Jolvita" className="h-12" />
+            <img src="/logo/logo.png" alt="Jolvita" className="h-12" />
           </div>
           <p className="text-muted-foreground mt-2">Your personal AI math tutor</p>
         </div>
