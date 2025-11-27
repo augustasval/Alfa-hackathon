@@ -158,23 +158,23 @@ export default function ParentDashboard() {
 
         const { data: tasks } = await supabase
           .from('learning_tasks')
-          .select('id, completed, created_at')
+          .select('id, is_completed, created_at')
           .eq('plan_id', plans[0].id);
 
         if (tasks) {
           totalTasks = tasks.length;
-          completedTasks = tasks.filter(t => t.completed).length;
+          completedTasks = tasks.filter(t => t.is_completed).length;
         }
 
         // Get latest task progress for last activity
         const { data: progress } = await supabase
           .from('task_progress')
-          .select('completed_at')
-          .order('completed_at', { ascending: false })
+          .select('updated_at')
+          .order('updated_at', { ascending: false })
           .limit(1);
 
         if (progress && progress.length > 0) {
-          lastActivityDate = progress[0].completed_at;
+          lastActivityDate = progress[0].updated_at;
         } else if (plans[0].updated_at) {
           lastActivityDate = plans[0].updated_at;
         }

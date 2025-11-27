@@ -5,8 +5,6 @@ import { cn } from "@/lib/utils";
 export const Navigation = () => {
   const navItems = [
     { to: "/student/dashboard", icon: Home, label: "Dashboard" },
-    { to: "/learn", icon: BookOpen, label: "Learn" },
-    { to: "/practice", icon: Target, label: "Practice" },
     { to: "/student/mistakes", icon: AlertCircle, label: "Mistakes" },
     { to: "/student/profile", icon: User, label: "Profile" },
   ];

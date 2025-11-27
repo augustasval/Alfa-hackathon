@@ -6,7 +6,11 @@ interface Profile {
   id: string;
   email: string;
   full_name: string;
+  name?: string | null;
   role: 'parent' | 'student';
+  invite_code?: string | null;
+  invite_code_expires_at?: string | null;
+  subscription_status?: string | null;
   created_at: string;
   updated_at: string;
 }
@@ -60,7 +64,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         .maybeSingle();
 
       if (error) throw error;
-      setProfile(data);
+      if (data) {
+        // Cast role to the proper type since we know it's always 'parent' or 'student'
+        setProfile({
+          ...data,
+          role: data.role as 'parent' | 'student'
+        });
+      }
     } catch (error) {
       console.error('Error loading profile:', error);
     } finally {
@@ -139,8 +149,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       const { error: insertError } = await supabase
         .from('pending_oauth_registrations')
         .insert({
+          user_id: crypto.randomUUID(), // Temporary placeholder
           role: role,
-          session_token: sessionToken,
         });
 
       if (insertError) {

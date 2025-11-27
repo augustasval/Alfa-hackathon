@@ -34,7 +34,7 @@ export default function AddStudentForm({ onSuccess, onCancel }: AddStudentFormPr
       // First, find the student profile with this invite code
       const { data: studentProfile, error: findError } = await supabase
         .from('profiles')
-        .select('id, email, name, grade_level, invite_code_expires_at')
+        .select('id, email, name, invite_code_expires_at')
         .eq('invite_code', inviteCode.trim())
         .eq('role', 'student')
         .maybeSingle();
@@ -57,7 +57,7 @@ export default function AddStudentForm({ onSuccess, onCancel }: AddStudentFormPr
         .insert({
           parent_id: user.id,
           name: studentProfile.name || studentProfile.email.split('@')[0],
-          grade_level: studentProfile.grade_level || 9,
+          grade_level: 9, // Default grade level
           linked_profile_id: studentProfile.id,
         });
 

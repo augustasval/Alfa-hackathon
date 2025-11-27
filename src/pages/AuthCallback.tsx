@@ -30,19 +30,11 @@ export default function AuthCallback() {
           if (profile) {
             // User already has a profile (existing user)
             // Clean up any pending registration data (in case they tried to register again)
-            const pendingRole = localStorage.getItem('pendingGoogleRole');
-            const sessionToken = localStorage.getItem('pendingGoogleSessionToken');
-
-            if (sessionToken) {
-              await supabase
-                .from('pending_oauth_registrations')
-                .delete()
-                .eq('session_token', sessionToken);
-              localStorage.removeItem('pendingGoogleSessionToken');
-            }
             localStorage.removeItem('pendingGoogleRole');
+            localStorage.removeItem('pendingGoogleSessionToken');
 
             // If they tried to register but already have an account, show them a message
+            const pendingRole = localStorage.getItem('pendingGoogleRole');
             if (pendingRole) {
               // Redirect with a message that they already have an account
               if (profile.role === 'parent') {
@@ -64,24 +56,19 @@ export default function AuthCallback() {
 
             if (pendingRole) {
               // Create profile for new Google user
+              const fullName = session.user.user_metadata?.full_name || session.user.email!.split('@')[0];
               const { error: profileError } = await supabase
                 .from('profiles')
                 .insert({
                   id: session.user.id,
                   email: session.user.email!,
+                  full_name: fullName,
                   name: session.user.user_metadata?.full_name || null,
                   role: pendingRole,
                 });
 
               // Clean up pending registration entry
-              const sessionToken = localStorage.getItem('pendingGoogleSessionToken');
-              if (sessionToken) {
-                await supabase
-                  .from('pending_oauth_registrations')
-                  .delete()
-                  .eq('session_token', sessionToken);
-                localStorage.removeItem('pendingGoogleSessionToken');
-              }
+              localStorage.removeItem('pendingGoogleSessionToken');
 
               localStorage.removeItem('pendingGoogleRole');
 
@@ -112,14 +99,7 @@ export default function AuthCallback() {
       } catch (error) {
         console.error('Error handling auth callback:', error);
         // Clean up all pending registration data
-        const sessionToken = localStorage.getItem('pendingGoogleSessionToken');
-        if (sessionToken) {
-          await supabase
-            .from('pending_oauth_registrations')
-            .delete()
-            .eq('session_token', sessionToken);
-          localStorage.removeItem('pendingGoogleSessionToken');
-        }
+        localStorage.removeItem('pendingGoogleSessionToken');
         localStorage.removeItem('pendingGoogleRole');
         navigate('/?error=auth_failed');
       }

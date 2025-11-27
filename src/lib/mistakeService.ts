@@ -49,26 +49,45 @@ export const mistakeService = {
       .order('created_at', { ascending: false });
 
     if (error) throw error;
-    return data || [];
+    // Cast type to the proper enum values
+    return (data || []).map(mistake => ({
+      ...mistake,
+      type: mistake.type as 'quiz' | 'exercise' | 'practice'
+    }));
   },
 
   // Get mistakes for linked students (parent view)
   async getLinkedStudentMistakes(parentId: string): Promise<Mistake[]> {
+    // First get the linked student IDs
+    const { data: students, error: studentsError } = await supabase
+      .from('students')
+      .select('linked_profile_id')
+      .eq('parent_id', parentId)
+      .not('linked_profile_id', 'is', null);
+
+    if (studentsError) throw studentsError;
+    
+    const linkedProfileIds = students?.map(s => s.linked_profile_id).filter(Boolean) || [];
+    
+    if (linkedProfileIds.length === 0) {
+      return [];
+    }
+
+    // Then get mistakes for those students
     const { data, error } = await supabase
       .from('mistakes')
       .select(`
         *,
         profiles!inner(id, full_name, email)
       `)
-      .in('user_id', 
-        supabase
-          .from('students')
-          .select('linked_profile_id')
-          .eq('parent_id', parentId)
-      );
+      .in('user_id', linkedProfileIds);
 
     if (error) throw error;
-    return data || [];
+    // Cast type to the proper enum values
+    return (data || []).map(mistake => ({
+      ...mistake,
+      type: mistake.type as 'quiz' | 'exercise' | 'practice'
+    }));
   },
 
   // Delete a mistake
