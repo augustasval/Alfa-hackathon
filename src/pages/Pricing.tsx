@@ -41,10 +41,6 @@ export default function Pricing() {
       period: '7 days',
       description: 'Test the platform risk-free',
       icon: Sparkles,
-      color: 'text-blue-500',
-      bgColor: 'bg-blue-500/10',
-      borderColor: 'border-blue-500/30',
-      buttonVariant: 'outline' as const,
       features: [
         'Access to all learning materials',
         'AI tutor help',
@@ -65,10 +61,6 @@ export default function Pricing() {
       period: 'per month',
       description: 'Homework help & exam prep',
       icon: Zap,
-      color: 'text-purple-500',
-      bgColor: 'bg-purple-500/10',
-      borderColor: 'border-purple-500/50',
-      buttonVariant: 'default' as const,
       popular: true,
       features: [
         'Full access to all materials',
@@ -89,10 +81,6 @@ export default function Pricing() {
       period: 'per month',
       description: 'Advanced learners & exam prep',
       icon: Crown,
-      color: 'text-amber-500',
-      bgColor: 'bg-amber-500/10',
-      borderColor: 'border-amber-500/30',
-      buttonVariant: 'outline' as const,
       features: [
         'Everything in Monthly',
         'Fastest AI responses',
@@ -107,21 +95,12 @@ export default function Pricing() {
   ];
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-indigo-900 relative overflow-hidden">
+    <div className="min-h-screen bg-gradient-to-b from-background to-secondary/20">
       {/* Animated background elements */}
-      <div
-        className="absolute w-[800px] h-[800px] rounded-full -top-96 -left-96 animate-pulse"
-        style={{
-          background: 'radial-gradient(circle, rgba(139, 92, 246, 0.2) 0%, transparent 70%)',
-        }}
-      />
-      <div
-        className="absolute w-[600px] h-[600px] rounded-full -bottom-48 -right-48 animate-pulse"
-        style={{
-          background: 'radial-gradient(circle, rgba(59, 130, 246, 0.2) 0%, transparent 70%)',
-          animationDelay: '2s'
-        }}
-      />
+      <div className="absolute inset-0 overflow-hidden">
+        <div className="absolute top-20 left-10 w-64 h-64 bg-primary/10 rounded-full blur-3xl animate-pulse"></div>
+        <div className="absolute bottom-20 right-10 w-96 h-96 bg-primary/5 rounded-full blur-3xl animate-pulse delay-1000"></div>
+      </div>
 
       {/* Navigation */}
       <nav className="relative z-10 container mx-auto px-6 py-6">
@@ -130,7 +109,6 @@ export default function Pricing() {
             <Button
               variant="ghost"
               onClick={handleBack}
-              className="text-white/80 hover:text-white hover:bg-white/10"
             >
               <ArrowLeft className="h-4 w-4 mr-2" />
               Back
@@ -145,12 +123,10 @@ export default function Pricing() {
 
       {/* Header */}
       <section className="relative z-10 container mx-auto px-6 pt-8 pb-12 text-center">
-        <h1 className="text-4xl md:text-5xl font-bold mb-4">
-          <span className="bg-gradient-to-r from-white via-purple-200 to-blue-200 bg-clip-text text-transparent">
-            Choose Your Plan
-          </span>
+        <h1 className="text-4xl md:text-5xl font-bold mb-4 text-foreground">
+          Choose Your Plan
         </h1>
-        <p className="text-xl text-white/70 max-w-2xl mx-auto">
+        <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
           Unlock your full potential with the right plan for your learning journey
         </p>
       </section>
@@ -161,24 +137,24 @@ export default function Pricing() {
           {plans.map((plan) => (
             <Card
               key={plan.id}
-              className={`relative bg-white/5 backdrop-blur-sm border-white/10 p-6 flex flex-col ${
-                plan.popular ? 'ring-2 ring-purple-500 scale-105' : ''
-              } hover:bg-white/10 transition-all`}
+              className={`relative bg-card border-border p-6 flex flex-col ${
+                plan.popular ? 'ring-2 ring-primary scale-105 shadow-lg' : ''
+              } hover:shadow-xl transition-all`}
             >
               {plan.popular && (
-                <Badge className="absolute -top-3 left-1/2 -translate-x-1/2 bg-purple-600 text-white">
+                <Badge className="absolute -top-3 left-1/2 -translate-x-1/2 bg-primary text-primary-foreground">
                   Most Popular
                 </Badge>
               )}
 
               {/* Plan Icon & Name */}
               <div className="flex items-center gap-3 mb-4">
-                <div className={`p-3 rounded-lg ${plan.bgColor}`}>
-                  <plan.icon className={`h-6 w-6 ${plan.color}`} />
+                <div className="p-3 rounded-lg bg-primary/10">
+                  <plan.icon className="h-6 w-6 text-primary" />
                 </div>
                 <div>
-                  <h3 className="text-xl font-bold text-white">{plan.name}</h3>
-                  <p className={`text-xs ${plan.color}`}>{plan.tagline}</p>
+                  <h3 className="text-xl font-bold text-foreground">{plan.name}</h3>
+                  <p className="text-xs text-primary">{plan.tagline}</p>
                 </div>
               </div>
 
@@ -186,30 +162,30 @@ export default function Pricing() {
               <div className="mb-4">
                 <div className="flex items-baseline gap-1">
                   {plan.price === 0 ? (
-                    <span className="text-4xl font-bold text-white">Free</span>
+                    <span className="text-4xl font-bold text-foreground">Free</span>
                   ) : (
                     <>
-                      <span className="text-4xl font-bold text-white">{plan.price}</span>
-                      <span className="text-2xl font-bold text-white">€</span>
+                      <span className="text-4xl font-bold text-foreground">{plan.price}</span>
+                      <span className="text-2xl font-bold text-foreground">€</span>
                     </>
                   )}
-                  <span className="text-white/50 ml-2">{plan.period}</span>
+                  <span className="text-muted-foreground ml-2">{plan.period}</span>
                 </div>
-                <p className="text-white/60 text-sm mt-2">{plan.description}</p>
+                <p className="text-muted-foreground text-sm mt-2">{plan.description}</p>
               </div>
 
               {/* Features */}
               <div className="flex-1 space-y-3 mb-6">
                 {plan.features.map((feature, idx) => (
                   <div key={idx} className="flex items-start gap-2">
-                    <Check className={`h-5 w-5 ${plan.color} flex-shrink-0 mt-0.5`} />
-                    <span className="text-white/80 text-sm">{feature}</span>
+                    <Check className="h-5 w-5 text-primary flex-shrink-0 mt-0.5" />
+                    <span className="text-foreground text-sm">{feature}</span>
                   </div>
                 ))}
                 {plan.limitations.map((limitation, idx) => (
                   <div key={idx} className="flex items-start gap-2 opacity-60">
-                    <span className="h-5 w-5 flex items-center justify-center text-white/40 flex-shrink-0">•</span>
-                    <span className="text-white/50 text-sm">{limitation}</span>
+                    <span className="h-5 w-5 flex items-center justify-center text-muted-foreground flex-shrink-0">•</span>
+                    <span className="text-muted-foreground text-sm">{limitation}</span>
                   </div>
                 ))}
               </div>
@@ -219,10 +195,8 @@ export default function Pricing() {
                 onClick={() => handleSelectPlan(plan.id)}
                 className={`w-full ${
                   plan.popular
-                    ? 'bg-purple-600 hover:bg-purple-700 text-white'
-                    : plan.id === 'trial'
-                    ? 'bg-blue-600 hover:bg-blue-700 text-white'
-                    : 'bg-amber-600 hover:bg-amber-700 text-white'
+                    ? 'bg-primary text-primary-foreground hover:bg-primary/90'
+                    : 'bg-secondary text-secondary-foreground hover:bg-secondary/80'
                 }`}
               >
                 {plan.price === 0 ? 'Start Free Trial' : 'Get Started'}
@@ -234,10 +208,10 @@ export default function Pricing() {
 
         {/* FAQ / Additional Info */}
         <div className="mt-16 text-center">
-          <p className="text-white/60">
+          <p className="text-muted-foreground">
             All plans include a 30-day money-back guarantee. Cancel anytime.
           </p>
-          <p className="text-white/40 text-sm mt-2">
+          <p className="text-muted-foreground text-sm mt-2">
             Questions? Contact us at support@corepus.com
           </p>
         </div>
