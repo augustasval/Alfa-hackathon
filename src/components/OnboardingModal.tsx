@@ -355,16 +355,15 @@ export const OnboardingModal = ({ open, onComplete, existingPlan, onClose }: Onb
         const controller = new AbortController();
         const timeoutId = setTimeout(() => controller.abort(), 10000); // 10 second timeout
 
+        const { data: { user } } = await supabase.auth.getUser();
+        
         const { data, error } = await supabase.functions.invoke('generate-learning-plan', {
           body: {
             grade: selectedGrade,
-            topicId: topic.id,
             topicName: topic.name,
             testDate: format(testDate, 'yyyy-MM-dd'),
-            sessionId
-          },
-          headers: {
-            'Content-Type': 'application/json'
+            sessionId,
+            user_id: user?.id
           }
         });
 
