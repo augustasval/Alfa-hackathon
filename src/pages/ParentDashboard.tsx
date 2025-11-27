@@ -391,7 +391,7 @@ export default function ParentDashboard() {
               </CardTitle>
             </CardHeader>
             <CardContent>
-              {scheduledSessions.filter(s => s.status === 'pending').length === 0 ? (
+              {scheduledSessions.filter(s => s.status === 'scheduled').length === 0 ? (
                 <div className="text-center py-8 text-muted-foreground">
                   <CalendarDays className="w-12 h-12 mx-auto mb-4 text-muted-foreground/50" />
                   <p>No upcoming sessions scheduled.</p>
@@ -400,7 +400,7 @@ export default function ParentDashboard() {
               ) : (
                 <div className="space-y-3">
                   {scheduledSessions
-                    .filter(s => s.status === 'pending')
+                    .filter(s => s.status === 'scheduled')
                     .slice(0, 5)
                     .map((session) => {
                       const student = students.find(s => s.id === session.student_id);
