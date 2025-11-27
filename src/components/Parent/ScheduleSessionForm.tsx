@@ -115,7 +115,7 @@ export default function ScheduleSessionForm({ students, selectedStudentId, onSuc
   return (
     <div>
       <h2 className="text-xl font-semibold mb-2">Schedule Practice Session</h2>
-      <p className="text-sm text-gray-500 mb-6">
+      <p className="text-sm text-muted-foreground mb-6">
         Your student will choose what to work on when they start the session.
       </p>
 
@@ -144,7 +144,7 @@ export default function ScheduleSessionForm({ students, selectedStudentId, onSuc
               type="button"
               variant={scheduleType === 'one-time' ? 'default' : 'outline'}
               onClick={() => setScheduleType('one-time')}
-              className={`flex-1 ${scheduleType === 'one-time' ? 'bg-purple-600 hover:bg-purple-700' : ''}`}
+              className="flex-1"
             >
               One-time
             </Button>
@@ -152,7 +152,7 @@ export default function ScheduleSessionForm({ students, selectedStudentId, onSuc
               type="button"
               variant={scheduleType === 'recurring' ? 'default' : 'outline'}
               onClick={() => setScheduleType('recurring')}
-              className={`flex-1 ${scheduleType === 'recurring' ? 'bg-purple-600 hover:bg-purple-700' : ''}`}
+              className="flex-1"
             >
               Recurring
             </Button>
@@ -182,7 +182,6 @@ export default function ScheduleSessionForm({ students, selectedStudentId, onSuc
                     variant={daysOfWeek.includes(day) ? 'default' : 'outline'}
                     size="sm"
                     onClick={() => toggleDay(day)}
-                    className={daysOfWeek.includes(day) ? 'bg-purple-600 hover:bg-purple-700' : ''}
                   >
                     {day.slice(0, 3)}
                   </Button>
@@ -198,7 +197,7 @@ export default function ScheduleSessionForm({ students, selectedStudentId, onSuc
                   variant={endType === 'ongoing' ? 'default' : 'outline'}
                   size="sm"
                   onClick={() => setEndType('ongoing')}
-                  className={`flex-1 ${endType === 'ongoing' ? 'bg-purple-600 hover:bg-purple-700' : ''}`}
+                  className="flex-1"
                 >
                   Ongoing
                 </Button>
@@ -207,7 +206,7 @@ export default function ScheduleSessionForm({ students, selectedStudentId, onSuc
                   variant={endType === 'until' ? 'default' : 'outline'}
                   size="sm"
                   onClick={() => setEndType('until')}
-                  className={`flex-1 ${endType === 'until' ? 'bg-purple-600 hover:bg-purple-700' : ''}`}
+                  className="flex-1"
                 >
                   Until Date
                 </Button>
@@ -270,7 +269,7 @@ export default function ScheduleSessionForm({ students, selectedStudentId, onSuc
           <Button
             type="submit"
             disabled={loading}
-            className="flex-1 bg-purple-600 hover:bg-purple-700"
+            className="flex-1"
           >
             {loading ? (
               <>

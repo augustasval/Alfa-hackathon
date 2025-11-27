@@ -5,6 +5,7 @@ import { supabase } from '@/integrations/supabase/client';
 import AddStudentForm from '@/components/Parent/AddStudentForm';
 import ScheduleSessionForm from '@/components/Parent/ScheduleSessionForm';
 import SessionReports from '@/components/Parent/SessionReports';
+import { StudentMistakesView } from '@/components/Parent/StudentMistakesView';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
@@ -229,10 +230,8 @@ export default function ParentDashboard() {
       <nav className="bg-card border-b border-border px-6 py-4 sticky top-0 z-50">
         <div className="max-w-7xl mx-auto flex justify-between items-center">
           <div className="flex items-center gap-3">
-            <GraduationCap className="w-8 h-8 text-primary" />
-            <span className="text-xl font-bold text-foreground">
-              Math Mastery AI
-            </span>
+            <img src="/logo/logocorepus (1).svg" alt="CorePus Logo" className="h-10 w-10" />
+            <img src="/name/solvesasdasd (1).svg" alt="CorePus" className="h-12" />
             <Badge variant="secondary" className="ml-2">Parent Portal</Badge>
           </div>
           <div className="flex items-center gap-4">
@@ -442,6 +441,9 @@ export default function ParentDashboard() {
 
         {/* Session Reports */}
         <SessionReports students={students} />
+
+        {/* Student Mistakes View */}
+        <StudentMistakesView />
       </div>
 
       {/* Add Student Dialog */}

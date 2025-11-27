@@ -120,19 +120,19 @@ export default function Login() {
   if (showEmailConfirmation) {
     return (
       <div className="min-h-screen bg-gradient-to-b from-background to-secondary/20 flex items-center justify-center p-8 relative overflow-hidden">
-        <div
-          className="absolute w-[400px] h-[400px] rounded-full -top-32 -left-32 animate-pulse opacity-30"
-          style={{
-            background: 'radial-gradient(circle, rgba(139, 92, 246, 0.15) 0%, transparent 70%)',
-          }}
-        />
-        <div
-          className="absolute w-[300px] h-[300px] rounded-full -bottom-24 -right-24 animate-pulse opacity-30"
-          style={{
-            background: 'radial-gradient(circle, rgba(59, 130, 246, 0.15) 0%, transparent 70%)',
-            animationDelay: '2s'
-          }}
-        />
+      <div
+        className="absolute w-[400px] h-[400px] rounded-full -top-32 -left-32 animate-pulse opacity-30"
+        style={{
+          background: 'radial-gradient(circle, hsl(var(--primary) / 0.15) 0%, transparent 70%)',
+        }}
+      />
+      <div
+        className="absolute w-[300px] h-[300px] rounded-full -bottom-24 -right-24 animate-pulse opacity-30"
+        style={{
+          background: 'radial-gradient(circle, hsl(var(--primary) / 0.15) 0%, transparent 70%)',
+          animationDelay: '2s'
+        }}
+      />
 
         <div className="w-full max-w-md relative z-10">
           <Card className="bg-card/95 backdrop-blur-sm border-border">
@@ -169,13 +169,13 @@ export default function Login() {
       <div
         className="absolute w-[400px] h-[400px] rounded-full -top-32 -left-32 animate-pulse opacity-30"
         style={{
-          background: 'radial-gradient(circle, rgba(139, 92, 246, 0.15) 0%, transparent 70%)',
+          background: 'radial-gradient(circle, hsl(var(--primary) / 0.15) 0%, transparent 70%)',
         }}
       />
       <div
         className="absolute w-[300px] h-[300px] rounded-full -bottom-24 -right-24 animate-pulse opacity-30"
         style={{
-          background: 'radial-gradient(circle, rgba(59, 130, 246, 0.15) 0%, transparent 70%)',
+          background: 'radial-gradient(circle, hsl(var(--primary) / 0.15) 0%, transparent 70%)',
           animationDelay: '2s'
         }}
       />

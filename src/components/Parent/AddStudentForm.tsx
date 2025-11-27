@@ -246,7 +246,7 @@ export default function AddStudentForm({ onSuccess, onCancel }: AddStudentFormPr
         <Button
           type="submit"
           disabled={loading}
-          className="flex-1 bg-purple-600 hover:bg-purple-700"
+          className="flex-1"
         >
           {loading ? (
             <>
