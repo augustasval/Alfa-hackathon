@@ -1,5 +1,5 @@
 import { NavLink } from "@/components/NavLink";
-import { BookOpen, Target, Video, Home } from "lucide-react";
+import { BookOpen, Target, Video, Home, AlertCircle, User } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 export const Navigation = () => {
@@ -7,7 +7,8 @@ export const Navigation = () => {
     { to: "/student/dashboard", icon: Home, label: "Dashboard" },
     { to: "/learn", icon: BookOpen, label: "Learn" },
     { to: "/practice", icon: Target, label: "Practice" },
-    { to: "/video-library", icon: Video, label: "Videos" },
+    { to: "/student/mistakes", icon: AlertCircle, label: "Mistakes" },
+    { to: "/student/profile", icon: User, label: "Profile" },
   ];
 
   return (
