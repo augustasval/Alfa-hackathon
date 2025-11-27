@@ -11,8 +11,18 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Badge } from '@/components/ui/badge';
-import { Users, Plus, Calendar, GraduationCap, Clock, CalendarDays, Link, User, Activity, CheckCircle, BookOpen, TrendingUp, CreditCard } from 'lucide-react';
+import { Users, Plus, Calendar, GraduationCap, Clock, CalendarDays, Link, User, Activity, CheckCircle, BookOpen, TrendingUp, CreditCard, X } from 'lucide-react';
 import { toast } from 'sonner';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/components/ui/alert-dialog';
 interface Student {
   id: string;
   name: string;
@@ -53,6 +63,7 @@ export default function ParentDashboard() {
   const [showAddStudent, setShowAddStudent] = useState(false);
   const [showScheduleSession, setShowScheduleSession] = useState(false);
   const [selectedStudentId, setSelectedStudentId] = useState<string | null>(null);
+  const [sessionToCancel, setSessionToCancel] = useState<string | null>(null);
   useEffect(() => {
     loadStudents();
     loadScheduledSessions();
@@ -192,6 +203,26 @@ export default function ParentDashboard() {
     if (signOut) {
       await signOut();
       navigate('/');
+    }
+  }
+
+  async function handleCancelSession() {
+    if (!sessionToCancel) return;
+
+    try {
+      const { error } = await supabase
+        .from('scheduled_sessions')
+        .update({ status: 'cancelled' })
+        .eq('id', sessionToCancel);
+
+      if (error) throw error;
+
+      toast.success('Session cancelled successfully');
+      loadScheduledSessions();
+      setSessionToCancel(null);
+    } catch (error) {
+      console.error('Error cancelling session:', error);
+      toast.error('Failed to cancel session');
     }
   }
   return <div className="min-h-screen bg-gradient-to-b from-background to-secondary/20">
@@ -340,22 +371,34 @@ export default function ParentDashboard() {
                   {scheduledSessions.filter(s => s.status === 'scheduled').slice(0, 5).map(session => {
                 const student = students.find(s => s.id === session.student_id);
                 return <div key={session.id} className="p-4 bg-primary/5 rounded-lg border border-primary/20">
-                          <div className="font-semibold text-foreground">{student?.name}</div>
-                          <div className="text-sm text-muted-foreground mt-1">
-                            {session.topic || 'Practice Session'}
-                          </div>
-                          <div className="flex items-center gap-4 mt-2 text-sm text-muted-foreground">
-                            <span className="flex items-center gap-1">
-                              <CalendarDays className="w-3 h-3" />
-                              {new Date(session.scheduled_date).toLocaleDateString()}
-                            </span>
-                            <span className="flex items-center gap-1">
-                              <Clock className="w-3 h-3" />
-                              {session.scheduled_time}
-                            </span>
-                            <Badge variant="secondary">
-                              {session.duration_minutes} min
-                            </Badge>
+                          <div className="flex items-start justify-between gap-3">
+                            <div className="flex-1">
+                              <div className="font-semibold text-foreground">{student?.name}</div>
+                              <div className="text-sm text-muted-foreground mt-1">
+                                {session.topic || 'Practice Session'}
+                              </div>
+                              <div className="flex items-center gap-4 mt-2 text-sm text-muted-foreground">
+                                <span className="flex items-center gap-1">
+                                  <CalendarDays className="w-3 h-3" />
+                                  {new Date(session.scheduled_date).toLocaleDateString()}
+                                </span>
+                                <span className="flex items-center gap-1">
+                                  <Clock className="w-3 h-3" />
+                                  {session.scheduled_time}
+                                </span>
+                                <Badge variant="secondary">
+                                  {session.duration_minutes} min
+                                </Badge>
+                              </div>
+                            </div>
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => setSessionToCancel(session.id)}
+                              className="text-destructive hover:text-destructive hover:bg-destructive/10"
+                            >
+                              <X className="w-4 h-4" />
+                            </Button>
                           </div>
                         </div>;
               })}
@@ -393,5 +436,23 @@ export default function ParentDashboard() {
         }} />
         </DialogContent>
       </Dialog>
+
+      {/* Cancel Session Confirmation Dialog */}
+      <AlertDialog open={!!sessionToCancel} onOpenChange={(open) => !open && setSessionToCancel(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Cancel Session?</AlertDialogTitle>
+            <AlertDialogDescription>
+              Are you sure you want to cancel this scheduled session? This action cannot be undone.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Keep Session</AlertDialogCancel>
+            <AlertDialogAction onClick={handleCancelSession} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
+              Cancel Session
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>;
 }

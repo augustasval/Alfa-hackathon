@@ -5,7 +5,7 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
-import { Calendar, Clock, Loader2, Video } from 'lucide-react';
+import { Calendar, Clock, Loader2, Video, Timer } from 'lucide-react';
 import { format } from 'date-fns';
 
 interface ScheduledSession {
@@ -33,11 +33,11 @@ export function ScheduledSessionsCard() {
     }
   }, [user]);
 
-  // Update current time every minute to refresh joinable status
+  // Update current time every second for accurate countdown
   useEffect(() => {
     const interval = setInterval(() => {
       setCurrentTime(new Date());
-    }, 60000); // Update every minute
+    }, 1000); // Update every second for countdown
 
     return () => clearInterval(interval);
   }, []);
@@ -59,6 +59,56 @@ export function ScheduledSessionsCard() {
     
     // Allow joining from 15 minutes before until 30 minutes after start
     return diffMinutes >= -30 && diffMinutes <= 15;
+  };
+
+  // Format countdown timer
+  const getCountdownText = (scheduledDate: string, scheduledTime: string): { text: string; color: string; canJoin: boolean } => {
+    const timeParts = scheduledTime.split(':');
+    const hours = parseInt(timeParts[0], 10);
+    const minutes = parseInt(timeParts[1], 10);
+    
+    const [year, month, day] = scheduledDate.split('-').map(Number);
+    const sessionDateTime = new Date(year, month - 1, day, hours, minutes, 0, 0);
+    
+    const now = currentTime;
+    const diffMs = sessionDateTime.getTime() - now.getTime();
+    const diffMinutes = Math.floor(diffMs / (1000 * 60));
+    const diffSeconds = Math.floor(diffMs / 1000);
+    
+    // Session ended
+    if (diffMinutes < -30) {
+      return { text: 'Session Ended', color: 'text-muted-foreground', canJoin: false };
+    }
+    
+    // Can join now (15 min before to 30 min after)
+    if (diffMinutes >= -30 && diffMinutes <= 15) {
+      const absMinutes = Math.abs(diffMinutes);
+      if (diffMinutes >= 0) {
+        // Before start - show time until start
+        if (absMinutes === 0) {
+          return { text: 'Starting Now!', color: 'text-green-400', canJoin: true };
+        }
+        return { text: `Starts in ${absMinutes}m`, color: 'text-green-400', canJoin: true };
+      } else {
+        // After start - show time left to join
+        const minutesLeft = 30 + diffMinutes; // Time until 30 min window closes
+        return { text: `Join window closes in ${minutesLeft}m`, color: 'text-orange-400', canJoin: true };
+      }
+    }
+    
+    // Before join window - show countdown
+    if (diffMinutes > 15) {
+      const hours = Math.floor(diffMinutes / 60);
+      const mins = diffMinutes % 60;
+      
+      if (hours > 0) {
+        return { text: `Starts in ${hours}h ${mins}m`, color: 'text-muted-foreground', canJoin: false };
+      } else {
+        return { text: `Starts in ${mins}m`, color: 'text-muted-foreground', canJoin: false };
+      }
+    }
+    
+    return { text: '', color: 'text-muted-foreground', canJoin: false };
   };
 
   const handleJoinSession = (session: ScheduledSession) => {
@@ -148,12 +198,12 @@ export function ScheduledSessionsCard() {
       <CardContent>
         <div className="space-y-3">
           {sessions.map((session) => {
-            const canJoin = isWithin15Minutes(session.scheduled_date, session.scheduled_time);
+            const countdown = getCountdownText(session.scheduled_date, session.scheduled_time);
             return (
               <div
                 key={session.id}
                 className={`p-4 rounded-lg border transition-all ${
-                  canJoin 
+                  countdown.canJoin 
                     ? 'bg-primary/10 border-primary/50 shadow-md' 
                     : 'bg-primary/5 border-primary/20'
                 }`}
@@ -164,9 +214,9 @@ export function ScheduledSessionsCard() {
                       <p className="font-semibold text-foreground">
                         {session.topic || 'Practice Session'}
                       </p>
-                      {canJoin && (
+                      {countdown.canJoin && (
                         <Badge className="bg-green-500/20 text-green-400 border-green-500/50 animate-pulse">
-                          Starting Soon
+                          Ready to Join
                         </Badge>
                       )}
                     </div>
@@ -179,13 +229,22 @@ export function ScheduledSessionsCard() {
                         <Clock className="w-3 h-3" />
                         {session.scheduled_time}
                       </span>
+                      <span className="flex items-center gap-1">
+                        <Badge variant="secondary">
+                          {session.duration_minutes} min
+                        </Badge>
+                      </span>
                     </div>
+                    {/* Countdown Timer */}
+                    {countdown.text && (
+                      <div className={`flex items-center gap-1 mt-2 text-sm font-medium ${countdown.color}`}>
+                        <Timer className="w-4 h-4" />
+                        {countdown.text}
+                      </div>
+                    )}
                   </div>
                   <div className="flex flex-col items-end gap-2">
-                    <Badge variant="secondary">
-                      {session.duration_minutes} min
-                    </Badge>
-                    {canJoin && (
+                    {countdown.canJoin && (
                       <Button
                         size="sm"
                         onClick={() => handleJoinSession(session)}
