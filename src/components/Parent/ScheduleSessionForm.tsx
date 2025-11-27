@@ -66,7 +66,7 @@ export default function ScheduleSessionForm({ students, selectedStudentId, onSuc
             scheduled_date: scheduledDate,
             scheduled_time: scheduledTime,
             duration_minutes: parseInt(durationMinutes),
-            status: 'pending',
+            status: 'scheduled',
           });
 
         if (insertError) throw insertError;
@@ -92,7 +92,7 @@ export default function ScheduleSessionForm({ students, selectedStudentId, onSuc
               scheduled_date: currentDate.toISOString().split('T')[0],
               scheduled_time: scheduledTime,
               duration_minutes: parseInt(durationMinutes),
-              status: 'pending',
+              status: 'scheduled',
             });
           }
         }
