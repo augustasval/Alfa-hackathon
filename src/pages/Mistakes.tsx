@@ -1,6 +1,8 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { AlertCircle, TrendingUp, Target, XCircle, ArrowLeft, BarChart3, Calendar, Lightbulb, TrendingDown } from "lucide-react";
+import { useAuth } from "@/contexts/AuthContext";
+import { AlertCircle, TrendingUp, Target, XCircle, BarChart3, Calendar, Lightbulb, TrendingDown, LogOut, CreditCard } from "lucide-react";
+import { Navigation } from "@/components/Navigation";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -16,8 +18,14 @@ import { mistakeStorage, MistakeRecord } from "@/lib/mistakeStorage";
 
 const Mistakes = () => {
   const navigate = useNavigate();
+  const { profile, signOut } = useAuth();
   const [mistakes, setMistakes] = useState<MistakeRecord[]>([]);
   const [topicStats, setTopicStats] = useState<Record<string, number>>({});
+
+  async function handleSignOut() {
+    await signOut();
+    navigate('/');
+  }
 
   const loadMistakes = () => {
     const loadedMistakes = mistakeStorage.getAll();
@@ -86,14 +94,34 @@ const Mistakes = () => {
     <div className="min-h-screen bg-gradient-to-b from-background to-secondary/20">
       <div className="container mx-auto px-4 py-6 max-w-6xl">
         <div className="flex flex-col gap-6">
+          {/* Header */}
           <div className="flex items-center justify-between">
-            <Button variant="ghost" onClick={() => navigate('/')}>
-              <ArrowLeft className="h-4 w-4 mr-2" />
-              Back
-            </Button>
-            <h1 className="text-4xl font-bold text-center">CorePus</h1>
-            <div className="w-[88px]" />
+            <div className="flex items-center gap-2">
+              <img src="/logo/logocorepus (1).svg" alt="CorePus Logo" className="h-12 w-12" />
+              <img src="/name/solvesasdasd (1).svg" alt="CorePus" className="h-14" />
+            </div>
+            <div className="flex items-center gap-2">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => navigate('/pricing')}
+              >
+                <CreditCard className="h-4 w-4 mr-2" />
+                Plans
+              </Button>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={handleSignOut}
+              >
+                <LogOut className="h-4 w-4 mr-2" />
+                Sign Out
+              </Button>
+            </div>
           </div>
+
+          {/* Navigation */}
+          <Navigation />
 
           <div className="grid md:grid-cols-3 lg:grid-cols-6 gap-4">
             <Card>

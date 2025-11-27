@@ -14,11 +14,13 @@ import AuthCallback from "./pages/AuthCallback";
 import Pricing from "./pages/Pricing";
 
 // Student Pages
-import StudentDashboard from "./pages/Home";
+import StudentDashboard from "./pages/StudentDashboard";
 import StepByStep from "./pages/StepByStep";
 import Practice from "./pages/Practice";
 import Exercise from "./pages/Exercise";
 import VideoLibrary from "./pages/VideoLibrary";
+import Mistakes from "./pages/Mistakes";
+import Profile from "./pages/Profile";
 import NotFound from "./pages/NotFound";
 
 // Parent Pages
@@ -81,6 +83,22 @@ const App = () => (
                 element={
                   <ProtectedRoute allowedRoles={['student']}>
                     <VideoLibrary />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/student/mistakes"
+                element={
+                  <ProtectedRoute allowedRoles={['student']}>
+                    <Mistakes />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/student/profile"
+                element={
+                  <ProtectedRoute allowedRoles={['student']}>
+                    <Profile />
                   </ProtectedRoute>
                 }
               />
