@@ -22,6 +22,7 @@ export type Database = {
           session_id: string | null
           test_date: string
           topic_name: string
+          updated_at: string | null
           user_id: string | null
         }
         Insert: {
@@ -31,6 +32,7 @@ export type Database = {
           session_id?: string | null
           test_date: string
           topic_name: string
+          updated_at?: string | null
           user_id?: string | null
         }
         Update: {
@@ -40,6 +42,7 @@ export type Database = {
           session_id?: string | null
           test_date?: string
           topic_name?: string
+          updated_at?: string | null
           user_id?: string | null
         }
         Relationships: [
@@ -172,7 +175,9 @@ export type Database = {
           id: string
           invite_code: string | null
           invite_code_expires_at: string | null
+          name: string | null
           role: string
+          subscription_status: string | null
           updated_at: string
         }
         Insert: {
@@ -182,7 +187,9 @@ export type Database = {
           id: string
           invite_code?: string | null
           invite_code_expires_at?: string | null
+          name?: string | null
           role: string
+          subscription_status?: string | null
           updated_at?: string
         }
         Update: {
@@ -192,7 +199,9 @@ export type Database = {
           id?: string
           invite_code?: string | null
           invite_code_expires_at?: string | null
+          name?: string | null
           role?: string
+          subscription_status?: string | null
           updated_at?: string
         }
         Relationships: []
@@ -200,30 +209,36 @@ export type Database = {
       scheduled_sessions: {
         Row: {
           created_at: string
+          duration_minutes: number | null
           id: string
           parent_id: string
           scheduled_date: string
           scheduled_time: string
           status: string | null
           student_id: string
+          topic: string | null
         }
         Insert: {
           created_at?: string
+          duration_minutes?: number | null
           id?: string
           parent_id: string
           scheduled_date: string
           scheduled_time: string
           status?: string | null
           student_id: string
+          topic?: string | null
         }
         Update: {
           created_at?: string
+          duration_minutes?: number | null
           id?: string
           parent_id?: string
           scheduled_date?: string
           scheduled_time?: string
           status?: string | null
           student_id?: string
+          topic?: string | null
         }
         Relationships: [
           {
@@ -244,28 +259,40 @@ export type Database = {
       }
       session_reports: {
         Row: {
+          accuracy_percentage: number | null
           created_at: string
           id: string
+          key_insights: string[] | null
           parent_id: string
+          recommendations: string[] | null
           report_content: string
           session_id: string
           student_id: string
+          summary: string | null
         }
         Insert: {
+          accuracy_percentage?: number | null
           created_at?: string
           id?: string
+          key_insights?: string[] | null
           parent_id: string
+          recommendations?: string[] | null
           report_content: string
           session_id: string
           student_id: string
+          summary?: string | null
         }
         Update: {
+          accuracy_percentage?: number | null
           created_at?: string
           id?: string
+          key_insights?: string[] | null
           parent_id?: string
+          recommendations?: string[] | null
           report_content?: string
           session_id?: string
           student_id?: string
+          summary?: string | null
         }
         Relationships: [
           {
@@ -414,7 +441,13 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      get_fresh_invite_code: {
+        Args: { user_id: string }
+        Returns: {
+          expires_at: string
+          invite_code: string
+        }[]
+      }
     }
     Enums: {
       [_ in never]: never
