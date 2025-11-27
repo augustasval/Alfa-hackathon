@@ -90,6 +90,34 @@ export default function ParentDashboard() {
       });
     }
   }, [searchParams, setSearchParams]);
+
+  // Real-time subscription for session updates
+  useEffect(() => {
+    const channel = supabase
+      .channel('scheduled-sessions-changes')
+      .on(
+        'postgres_changes',
+        {
+          event: 'UPDATE',
+          schema: 'public',
+          table: 'scheduled_sessions'
+        },
+        (payload) => {
+          setScheduledSessions(prev =>
+            prev.map(session =>
+              session.id === payload.new.id
+                ? { ...session, ...payload.new as ScheduledSession }
+                : session
+            )
+          );
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, []);
   async function loadStudents() {
     const {
       data,
@@ -206,6 +234,15 @@ export default function ParentDashboard() {
       await signOut();
       navigate('/');
     }
+  }
+
+  function isSessionLive(session: ScheduledSession) {
+    const now = new Date();
+    const sessionDateTime = new Date(`${session.scheduled_date}T${session.scheduled_time}`);
+    const fifteenMinsBefore = new Date(sessionDateTime.getTime() - 15 * 60000);
+    const thirtyMinsAfter = new Date(sessionDateTime.getTime() + 30 * 60000);
+    
+    return now >= fifteenMinsBefore && now <= thirtyMinsAfter && (session.exercises_completed || 0) > 0;
   }
 
   async function handleCancelSession() {
@@ -372,10 +409,26 @@ export default function ParentDashboard() {
                 </div> : <div className="space-y-3">
                   {scheduledSessions.filter(s => s.status === 'scheduled').slice(0, 5).map(session => {
                 const student = students.find(s => s.id === session.student_id);
+                const isLive = isSessionLive(session);
+                const accuracy = session.exercises_completed && session.exercises_completed > 0
+                  ? Math.round(((session.exercises_completed - (session.mistakes_count || 0)) / session.exercises_completed) * 100)
+                  : null;
+
                 return <div key={session.id} className="p-4 bg-primary/5 rounded-lg border border-primary/20">
                           <div className="flex items-start justify-between gap-3">
                             <div className="flex-1">
-                              <div className="font-semibold text-foreground">{student?.name}</div>
+                              <div className="flex items-center gap-2">
+                                <span className="font-semibold text-foreground">{student?.name}</span>
+                                {isLive && (
+                                  <span className="flex items-center gap-1 text-xs font-semibold text-green-600 dark:text-green-400">
+                                    <span className="relative flex h-2 w-2">
+                                      <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75"></span>
+                                      <span className="relative inline-flex rounded-full h-2 w-2 bg-green-500"></span>
+                                    </span>
+                                    LIVE
+                                  </span>
+                                )}
+                              </div>
                               <div className="text-sm text-muted-foreground mt-1">
                                 {session.topic || 'Practice Session'}
                               </div>
@@ -392,6 +445,25 @@ export default function ParentDashboard() {
                                   {session.duration_minutes} min
                                 </Badge>
                               </div>
+
+                              {isLive && (
+                                <div className="mt-3 pt-3 border-t border-border">
+                                  <p className="text-sm font-medium text-foreground mb-2">Live Progress:</p>
+                                  <div className="flex flex-wrap gap-4 text-sm">
+                                    <span className="text-muted-foreground">
+                                      Exercises: <span className="font-medium text-foreground">{session.exercises_completed || 0}</span>
+                                    </span>
+                                    <span className="text-muted-foreground">
+                                      Mistakes: <span className="font-medium text-foreground">{session.mistakes_count || 0}</span>
+                                    </span>
+                                    {accuracy !== null && (
+                                      <span className="text-muted-foreground">
+                                        Accuracy: <span className="font-medium text-foreground">{accuracy}%</span>
+                                      </span>
+                                    )}
+                                  </div>
+                                </div>
+                              )}
                             </div>
                             <Button
                               variant="ghost"
