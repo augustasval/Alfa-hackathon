@@ -14,7 +14,401 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      learning_plans: {
+        Row: {
+          created_at: string
+          grade: string
+          id: string
+          session_id: string | null
+          test_date: string
+          topic_name: string
+          user_id: string | null
+        }
+        Insert: {
+          created_at?: string
+          grade: string
+          id?: string
+          session_id?: string | null
+          test_date: string
+          topic_name: string
+          user_id?: string | null
+        }
+        Update: {
+          created_at?: string
+          grade?: string
+          id?: string
+          session_id?: string | null
+          test_date?: string
+          topic_name?: string
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "learning_plans_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      learning_tasks: {
+        Row: {
+          completed_at: string | null
+          created_at: string
+          day_number: number
+          description: string
+          id: string
+          is_completed: boolean | null
+          plan_id: string
+          scheduled_date: string
+          task_type: string
+          title: string
+        }
+        Insert: {
+          completed_at?: string | null
+          created_at?: string
+          day_number: number
+          description: string
+          id?: string
+          is_completed?: boolean | null
+          plan_id: string
+          scheduled_date: string
+          task_type: string
+          title: string
+        }
+        Update: {
+          completed_at?: string | null
+          created_at?: string
+          day_number?: number
+          description?: string
+          id?: string
+          is_completed?: boolean | null
+          plan_id?: string
+          scheduled_date?: string
+          task_type?: string
+          title?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "learning_tasks_plan_id_fkey"
+            columns: ["plan_id"]
+            isOneToOne: false
+            referencedRelation: "learning_plans"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      mistakes: {
+        Row: {
+          attempts: number | null
+          correct_answer: string | null
+          created_at: string
+          id: string
+          problem: string
+          topic: string
+          type: string
+          user_answer: string | null
+          user_id: string
+        }
+        Insert: {
+          attempts?: number | null
+          correct_answer?: string | null
+          created_at?: string
+          id?: string
+          problem: string
+          topic: string
+          type: string
+          user_answer?: string | null
+          user_id: string
+        }
+        Update: {
+          attempts?: number | null
+          correct_answer?: string | null
+          created_at?: string
+          id?: string
+          problem?: string
+          topic?: string
+          type?: string
+          user_answer?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "mistakes_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      pending_oauth_registrations: {
+        Row: {
+          created_at: string
+          id: string
+          role: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          role: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          role?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      profiles: {
+        Row: {
+          created_at: string
+          email: string
+          full_name: string
+          id: string
+          invite_code: string | null
+          invite_code_expires_at: string | null
+          role: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          email: string
+          full_name: string
+          id: string
+          invite_code?: string | null
+          invite_code_expires_at?: string | null
+          role: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          email?: string
+          full_name?: string
+          id?: string
+          invite_code?: string | null
+          invite_code_expires_at?: string | null
+          role?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      scheduled_sessions: {
+        Row: {
+          created_at: string
+          id: string
+          parent_id: string
+          scheduled_date: string
+          scheduled_time: string
+          status: string | null
+          student_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          parent_id: string
+          scheduled_date: string
+          scheduled_time: string
+          status?: string | null
+          student_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          parent_id?: string
+          scheduled_date?: string
+          scheduled_time?: string
+          status?: string | null
+          student_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "scheduled_sessions_parent_id_fkey"
+            columns: ["parent_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "scheduled_sessions_student_id_fkey"
+            columns: ["student_id"]
+            isOneToOne: false
+            referencedRelation: "students"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      session_reports: {
+        Row: {
+          created_at: string
+          id: string
+          parent_id: string
+          report_content: string
+          session_id: string
+          student_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          parent_id: string
+          report_content: string
+          session_id: string
+          student_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          parent_id?: string
+          report_content?: string
+          session_id?: string
+          student_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "session_reports_parent_id_fkey"
+            columns: ["parent_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "session_reports_session_id_fkey"
+            columns: ["session_id"]
+            isOneToOne: false
+            referencedRelation: "scheduled_sessions"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "session_reports_student_id_fkey"
+            columns: ["student_id"]
+            isOneToOne: false
+            referencedRelation: "students"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      students: {
+        Row: {
+          created_at: string
+          grade_level: number | null
+          id: string
+          linked_profile_id: string | null
+          name: string
+          parent_id: string
+        }
+        Insert: {
+          created_at?: string
+          grade_level?: number | null
+          id?: string
+          linked_profile_id?: string | null
+          name: string
+          parent_id: string
+        }
+        Update: {
+          created_at?: string
+          grade_level?: number | null
+          id?: string
+          linked_profile_id?: string | null
+          name?: string
+          parent_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "students_linked_profile_id_fkey"
+            columns: ["linked_profile_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "students_parent_id_fkey"
+            columns: ["parent_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      task_progress: {
+        Row: {
+          created_at: string | null
+          current_phase: string | null
+          exercises_completed: number | null
+          id: string
+          quiz_passed: boolean | null
+          session_id: string
+          task_id: string
+          updated_at: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          current_phase?: string | null
+          exercises_completed?: number | null
+          id?: string
+          quiz_passed?: boolean | null
+          session_id: string
+          task_id: string
+          updated_at?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          current_phase?: string | null
+          exercises_completed?: number | null
+          id?: string
+          quiz_passed?: boolean | null
+          session_id?: string
+          task_id?: string
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "task_progress_task_id_fkey"
+            columns: ["task_id"]
+            isOneToOne: false
+            referencedRelation: "learning_tasks"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      tutoring_sessions: {
+        Row: {
+          completed: boolean | null
+          created_at: string
+          duration_minutes: number | null
+          id: string
+          topic: string
+          user_id: string
+        }
+        Insert: {
+          completed?: boolean | null
+          created_at?: string
+          duration_minutes?: number | null
+          id?: string
+          topic: string
+          user_id: string
+        }
+        Update: {
+          completed?: boolean | null
+          created_at?: string
+          duration_minutes?: number | null
+          id?: string
+          topic?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "tutoring_sessions_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Views: {
       [_ in never]: never
