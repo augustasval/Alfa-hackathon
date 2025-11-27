@@ -13,7 +13,6 @@ export default function Login() {
   const [activeTab, setActiveTab] = useState<'login' | 'register'>('login');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const [selectedRole, setSelectedRole] = useState<'student' | 'parent' | null>(null);
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
   const [showEmailConfirmation, setShowEmailConfirmation] = useState(false);
@@ -66,10 +65,6 @@ export default function Login() {
 
   async function handleRegister(e: FormEvent) {
     e.preventDefault();
-    if (!selectedRole) {
-      setError('Please select whether you are a student or parent');
-      return;
-    }
 
     setError('');
     setLoading(true);
@@ -77,7 +72,8 @@ export default function Login() {
     try {
       // Use email as fullName by default, or user can provide their own
       const fullName = email.split('@')[0];
-      const { needsEmailConfirmation } = await signUp(email, password, fullName, selectedRole);
+      // Always register as parent - students are created by parents
+      const { needsEmailConfirmation } = await signUp(email, password, fullName, 'parent');
       if (needsEmailConfirmation) {
         setShowEmailConfirmation(true);
       }
@@ -89,15 +85,11 @@ export default function Login() {
   }
 
   async function handleGoogleRegister() {
-    if (!selectedRole) {
-      setError('Please select whether you are a student or parent before continuing with Google');
-      return;
-    }
-
     setError('');
     setLoading(true);
     try {
-      await signInWithGoogle(selectedRole);
+      // Always register as parent - students are created by parents
+      await signInWithGoogle('parent');
     } catch (err: unknown) {
       setError(err instanceof Error ? err.message : 'Failed to sign in with Google');
       setLoading(false);
@@ -299,40 +291,13 @@ export default function Login() {
               </form>
             ) : (
               <form onSubmit={handleRegister} className="space-y-4">
-                {/* Role Selection */}
-                <div className="space-y-3">
-                  <Label>I am a...</Label>
-                  <div className="grid grid-cols-2 gap-3">
-                    <button
-                      type="button"
-                      onClick={() => setSelectedRole('student')}
-                      className={`
-                        p-4 rounded-lg border-2 transition-all text-center
-                        ${selectedRole === 'student'
-                          ? 'border-primary bg-primary/10 text-foreground'
-                          : 'border-border bg-card/50 text-muted-foreground hover:border-border/80'
-                        }
-                      `}
-                    >
-                      <BookOpen className="w-8 h-8 mx-auto mb-2" />
-                      <span className="font-medium">Student</span>
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => setSelectedRole('parent')}
-                      className={`
-                        p-4 rounded-lg border-2 transition-all text-center
-                        ${selectedRole === 'parent'
-                          ? 'border-primary bg-primary/10 text-foreground'
-                          : 'border-border bg-card/50 text-muted-foreground hover:border-border/80'
-                        }
-                      `}
-                    >
-                      <Users className="w-8 h-8 mx-auto mb-2" />
-                      <span className="font-medium">Parent</span>
-                    </button>
-                  </div>
-                </div>
+                <Alert className="bg-blue-50 border-blue-200">
+                  <AlertDescription className="text-sm text-blue-800">
+                    <strong>Parents:</strong> Create your account here. After registration, you can create student accounts for your children.
+                    <br />
+                    <strong className="mt-2 block">Students:</strong> Ask your parent for login credentials.
+                  </AlertDescription>
+                </Alert>
 
                 <div className="space-y-2">
                   <Label htmlFor="register-email">Email</Label>
@@ -367,7 +332,7 @@ export default function Login() {
 
                 <Button
                   type="submit"
-                  disabled={loading || !selectedRole}
+                  disabled={loading}
                   className="w-full h-11"
                 >
                   {loading ? (
@@ -376,7 +341,7 @@ export default function Login() {
                       Creating account...
                     </>
                   ) : (
-                    'Create Account'
+                    'Create Parent Account'
                   )}
                 </Button>
 
@@ -393,8 +358,8 @@ export default function Login() {
                   type="button"
                   variant="outline"
                   onClick={handleGoogleRegister}
-                  disabled={loading || !selectedRole}
-                  className="w-full h-11 disabled:opacity-50"
+                  disabled={loading}
+                  className="w-full h-11"
                 >
                   <svg className="mr-2 h-4 w-4" viewBox="0 0 24 24">
                     <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4" />
