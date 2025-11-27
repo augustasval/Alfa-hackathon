@@ -26,6 +26,9 @@ import NotFound from "./pages/NotFound";
 // Parent Pages
 import ParentDashboard from "./pages/ParentDashboard";
 
+// Utility Pages
+import LogoProcessor from "./pages/LogoProcessor";
+
 const queryClient = new QueryClient();
 
 const App = () => (
@@ -44,6 +47,9 @@ const App = () => (
               <Route path="/login" element={<Login />} />
               <Route path="/auth/callback" element={<AuthCallback />} />
               <Route path="/pricing" element={<Pricing />} />
+              
+              {/* Utility Pages */}
+              <Route path="/logo-processor" element={<LogoProcessor />} />
 
               {/* Student Routes (protected) */}
               <Route
