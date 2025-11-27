@@ -16,25 +16,31 @@ export type Database = {
     Tables: {
       custom_exercises: {
         Row: {
+          completed_at: string | null
           created_at: string | null
           difficulty: string | null
           id: string
+          is_completed: boolean | null
           question: string
           topic: string
           user_id: string
         }
         Insert: {
+          completed_at?: string | null
           created_at?: string | null
           difficulty?: string | null
           id?: string
+          is_completed?: boolean | null
           question: string
           topic: string
           user_id: string
         }
         Update: {
+          completed_at?: string | null
           created_at?: string | null
           difficulty?: string | null
           id?: string
+          is_completed?: boolean | null
           question?: string
           topic?: string
           user_id?: string
