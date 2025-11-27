@@ -254,7 +254,7 @@ const Mistakes = () => {
                       color: "hsl(var(--secondary))",
                     },
                   }}
-                  className="h-[200px]"
+                  className="h-[200px] w-full"
                 >
                   <ResponsiveContainer width="100%" height="100%">
                     <LineChart data={chartData}>
