@@ -13,9 +13,10 @@ serve(async (req) => {
   }
 
   try {
-    const { grade, topicId, topicName, testDate, sessionId } = await req.json();
+    const body = await req.json();
+    const { grade, topicName, testDate, sessionId, user_id } = body;
     
-    console.log('Generating learning plan for:', { grade, topicId, topicName, testDate, sessionId });
+    console.log('Generating learning plan for:', { grade, topicName, testDate, sessionId });
 
     const LOVABLE_API_KEY = Deno.env.get('LOVABLE_API_KEY');
     if (!LOVABLE_API_KEY) {
@@ -124,8 +125,8 @@ Generate tasks for each day leading up to the test. Make it engaging and achieva
       .from('learning_plans')
       .insert({
         session_id: sessionId,
+        user_id: user_id,
         grade,
-        topic_id: topicId,
         topic_name: topicName,
         test_date: testDate
       })
