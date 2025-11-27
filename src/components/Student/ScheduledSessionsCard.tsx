@@ -1,9 +1,11 @@
 import { useEffect, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
-import { Calendar, Clock, Loader2 } from 'lucide-react';
+import { Calendar, Clock, Loader2, Video } from 'lucide-react';
 import { format } from 'date-fns';
 
 interface ScheduledSession {
@@ -20,14 +22,47 @@ interface ScheduledSession {
 
 export function ScheduledSessionsCard() {
   const { user } = useAuth();
+  const navigate = useNavigate();
   const [sessions, setSessions] = useState<ScheduledSession[]>([]);
   const [loading, setLoading] = useState(true);
+  const [currentTime, setCurrentTime] = useState(new Date());
 
   useEffect(() => {
     if (user) {
       loadScheduledSessions();
     }
   }, [user]);
+
+  // Update current time every minute to refresh joinable status
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setCurrentTime(new Date());
+    }, 60000); // Update every minute
+
+    return () => clearInterval(interval);
+  }, []);
+
+  // Check if a session is within 15 minutes of start time
+  const isWithin15Minutes = (scheduledDate: string, scheduledTime: string): boolean => {
+    const [hours, minutes] = scheduledTime.split(':').map(Number);
+    const sessionDateTime = new Date(scheduledDate);
+    sessionDateTime.setHours(hours, minutes, 0, 0);
+    
+    const now = currentTime;
+    const diffMs = sessionDateTime.getTime() - now.getTime();
+    const diffMinutes = diffMs / (1000 * 60);
+    
+    // Within 15 minutes before start
+    return diffMinutes >= -5 && diffMinutes <= 15;
+  };
+
+  const handleJoinSession = (session: ScheduledSession) => {
+    // Store session info for context
+    if (session.topic) {
+      localStorage.setItem('sessionTopic', session.topic);
+    }
+    navigate('/exercice');
+  };
 
   async function loadScheduledSessions() {
     try {
@@ -107,33 +142,59 @@ export function ScheduledSessionsCard() {
       </CardHeader>
       <CardContent>
         <div className="space-y-3">
-          {sessions.map((session) => (
-            <div
-              key={session.id}
-              className="p-4 bg-primary/5 rounded-lg border border-primary/20"
-            >
-              <div className="flex items-start justify-between">
-                <div className="flex-1">
-                  <p className="font-semibold text-foreground">
-                    {session.topic || 'Practice Session'}
-                  </p>
-                  <div className="flex items-center gap-4 mt-2 text-sm text-muted-foreground">
-                    <span className="flex items-center gap-1">
-                      <Calendar className="w-3 h-3" />
-                      {format(new Date(session.scheduled_date), 'EEE, MMM d, yyyy')}
-                    </span>
-                    <span className="flex items-center gap-1">
-                      <Clock className="w-3 h-3" />
-                      {session.scheduled_time}
-                    </span>
+          {sessions.map((session) => {
+            const canJoin = isWithin15Minutes(session.scheduled_date, session.scheduled_time);
+            return (
+              <div
+                key={session.id}
+                className={`p-4 rounded-lg border transition-all ${
+                  canJoin 
+                    ? 'bg-primary/10 border-primary/50 shadow-md' 
+                    : 'bg-primary/5 border-primary/20'
+                }`}
+              >
+                <div className="flex items-start justify-between gap-3">
+                  <div className="flex-1">
+                    <div className="flex items-center gap-2 mb-1">
+                      <p className="font-semibold text-foreground">
+                        {session.topic || 'Practice Session'}
+                      </p>
+                      {canJoin && (
+                        <Badge className="bg-green-500/20 text-green-400 border-green-500/50 animate-pulse">
+                          Starting Soon
+                        </Badge>
+                      )}
+                    </div>
+                    <div className="flex items-center gap-4 mt-2 text-sm text-muted-foreground">
+                      <span className="flex items-center gap-1">
+                        <Calendar className="w-3 h-3" />
+                        {format(new Date(session.scheduled_date), 'EEE, MMM d, yyyy')}
+                      </span>
+                      <span className="flex items-center gap-1">
+                        <Clock className="w-3 h-3" />
+                        {session.scheduled_time}
+                      </span>
+                    </div>
+                  </div>
+                  <div className="flex flex-col items-end gap-2">
+                    <Badge variant="secondary">
+                      {session.duration_minutes} min
+                    </Badge>
+                    {canJoin && (
+                      <Button
+                        size="sm"
+                        onClick={() => handleJoinSession(session)}
+                        className="animate-pulse"
+                      >
+                        <Video className="w-4 h-4 mr-1" />
+                        Join Session
+                      </Button>
+                    )}
                   </div>
                 </div>
-                <Badge variant="secondary">
-                  {session.duration_minutes} min
-                </Badge>
               </div>
-            </div>
-          ))}
+            );
+          })}
         </div>
       </CardContent>
     </Card>

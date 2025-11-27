@@ -44,6 +44,7 @@ const Exercise = () => {
 
   // Progress states
   const [completedCount, setCompletedCount] = useState(0);
+  const [completedProblemIds, setCompletedProblemIds] = useState<string[]>([]);
   const [selectedIncorrectSteps, setSelectedIncorrectSteps] = useState<number[]>([]);
   const [isCompleting, setIsCompleting] = useState(false);
 
@@ -172,6 +173,11 @@ const Exercise = () => {
   const goToNextQuestion = async () => {
     if (completedCount >= 4) return;
 
+    // Mark current problem as completed
+    if (selectedProblem) {
+      setCompletedProblemIds(prev => [...prev, selectedProblem.id]);
+    }
+
     // Save mistake if any steps were marked incorrect
     if (selectedIncorrectSteps.length > 0 && selectedProblem) {
       try {
@@ -238,6 +244,7 @@ const Exercise = () => {
       <ProblemSelectionScreen
         problems={problems}
         completedCount={completedCount}
+        completedProblemIds={completedProblemIds}
         currentTaskTitle={currentTask?.title}
         onProblemSelect={handleProblemSelect}
       />
