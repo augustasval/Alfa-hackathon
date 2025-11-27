@@ -144,8 +144,8 @@ const Mistakes = () => {
           {/* Header */}
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
-              <img src="/logo/logocorepus (1).svg" alt="CorePus Logo" className="h-12 w-12" />
-              <img src="/name/solvesasdasd (1).svg" alt="CorePus" className="h-14" />
+              <img src="/logo/logo.svg" alt="CorePus Logo" className="h-12 w-12" />
+              <img src="/name/brand-name.svg" alt="CorePus" className="h-14" />
             </div>
             <div className="flex items-center gap-2">
               <Button

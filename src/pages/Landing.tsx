@@ -74,8 +74,8 @@ export default function Landing() {
       <nav className="relative z-10 container mx-auto px-6 py-6">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <img src="/logo/logocorepus (1).svg" alt="CorePus Logo" className="h-14 w-14" />
-            <img src="/name/solvesasdasd (1).svg" alt="CorePus" className="h-12" />
+            <img src="/logo/logo.svg" alt="CorePus Logo" className="h-14 w-14" />
+            <img src="/name/brand-name.svg" alt="CorePus" className="h-12" />
           </div>
           <div className="flex items-center gap-2">
             <Button
@@ -235,8 +235,8 @@ export default function Landing() {
         <div className="container mx-auto px-6">
           <div className="flex flex-col md:flex-row items-center justify-between gap-4">
             <div className="flex items-center gap-2">
-              <img src="/logo/logocorepus (1).svg" alt="CorePus Logo" className="h-8 w-8" />
-              <img src="/name/solvesasdasd (1).svg" alt="CorePus" className="h-6" />
+              <img src="/logo/logo.svg" alt="CorePus Logo" className="h-8 w-8" />
+              <img src="/name/brand-name.svg" alt="CorePus" className="h-6" />
             </div>
             <p className="text-muted-foreground text-sm">
               © 2024 CorePus. All rights reserved.

@@ -9,7 +9,7 @@ import ReactMarkdown from "react-markdown";
 import remarkMath from "remark-math";
 import rehypeKatex from "rehype-katex";
 import "katex/dist/katex.min.css";
-import { mistakeStorage } from "@/lib/mistakeStorage";
+import { mistakeService } from "@/lib/mistakeService";
 import { useLearningPlan } from "@/hooks/useLearningPlan";
 
 interface QuizQuestion {
@@ -66,16 +66,20 @@ export const TheoryQuiz = ({ questions, onComplete, onReadTheory, onRetry }: The
       
       const topic = currentTask?.title || 'Quiz';
       
-      newAnswers.forEach((answer, index) => {
+      newAnswers.forEach(async (answer, index) => {
         // Type-safe comparison: ensure both are numbers
         if (answer !== null && Number(answer) !== Number(questions[index].correctAnswer)) {
-          mistakeStorage.add({
-            type: 'quiz',
-            problem: questions[index].question,
-            topic,
-            userAnswer: questions[index].options[answer],
-            correctAnswer: questions[index].options[questions[index].correctAnswer],
-          });
+          try {
+            await mistakeService.saveMistake({
+              type: 'quiz',
+              problem: questions[index].question,
+              topic,
+              user_answer: questions[index].options[answer],
+              correct_answer: questions[index].options[questions[index].correctAnswer],
+            });
+          } catch (error) {
+            console.error('Error saving mistake:', error);
+          }
         }
       });
       

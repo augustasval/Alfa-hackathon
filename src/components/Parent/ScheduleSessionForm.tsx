@@ -7,6 +7,7 @@ import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Loader2 } from 'lucide-react';
+import { toast } from 'sonner';
 
 interface Student {
   id: string;
@@ -69,6 +70,7 @@ export default function ScheduleSessionForm({ students, selectedStudentId, onSuc
           });
 
         if (insertError) throw insertError;
+        toast.success('Session scheduled successfully!');
       } else {
         // Create recurring schedule - sessions for next 4 weeks
         const sessions = [];
@@ -101,12 +103,15 @@ export default function ScheduleSessionForm({ students, selectedStudentId, onSuc
             .insert(sessions);
 
           if (insertError) throw insertError;
+          toast.success(`${sessions.length} sessions scheduled successfully!`);
         }
       }
 
       onSuccess();
     } catch (err: unknown) {
-      setError(err instanceof Error ? err.message : 'Failed to schedule session');
+      const errorMessage = err instanceof Error ? err.message : 'Failed to schedule session';
+      setError(errorMessage);
+      toast.error(errorMessage);
     } finally {
       setLoading(false);
     }
