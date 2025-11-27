@@ -39,10 +39,10 @@ export default function ProtectedRoute({ children, allowedRoles }: ProtectedRout
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900">
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-b from-background to-secondary/20">
         <div className="text-center">
-          <Loader2 className="w-12 h-12 animate-spin text-purple-500 mx-auto mb-4" />
-          <div className="text-white/70 text-lg font-medium">Loading...</div>
+          <Loader2 className="w-12 h-12 animate-spin text-primary mx-auto mb-4" />
+          <div className="text-muted-foreground text-lg font-medium">Loading...</div>
         </div>
       </div>
     );
