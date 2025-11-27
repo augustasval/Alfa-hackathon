@@ -225,62 +225,97 @@ export const StepQuestionDialog = ({
     setIsLoading(true);
 
     try {
-      // Get session IDs for tracking
-      const mainSessionId = SessionManager.getSession();
-      const theoryChatSessionId = getTheoryChatSessionId(topic);
-
       const response = await fetch(
-        'https://oopsautomation.app.n8n.cloud/webhook/theoryactual53423',
+        `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/ask-step-question`,
         {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
+            Authorization: `Bearer ${import.meta.env.VITE_SUPABASE_ANON_KEY}`,
           },
           body: JSON.stringify({
-            // Session tracking
-            sessionId: mainSessionId, // Main user session ID
-            chatSessionId: theoryChatSessionId, // Unique ID for this theory chat (persists across steps)
-            // Theory content - all in LaTeX format (use $...$ for inline math, $$...$$ for display math)
-            stepTitle: stepContent,
-            stepExplanation: stepExplanation, // Contains LaTeX math expressions
-            stepExample: stepExample, // Contains LaTeX math expressions
-            // User interaction
+            stepContent,
+            stepExplanation,
+            stepExample,
             userQuestion: userMessage.content,
+            topic,
+            gradeLevel,
             conversationHistory: messages.map(m => ({
               role: m.role,
               content: m.content
             })),
-            // Context
-            topic: topic,
-            gradeLevel: gradeLevel,
-            // Metadata
-            timestamp: new Date().toISOString(),
-            contentFormat: "latex", // Indicates math expressions are in LaTeX format
           }),
         }
       );
 
       if (!response.ok) {
+        if (response.status === 429) {
+          throw new Error("Rate limit exceeded. Please try again later.");
+        }
+        if (response.status === 402) {
+          throw new Error("AI usage limit reached. Please contact support.");
+        }
         throw new Error("Failed to get AI response");
       }
 
-      const responseText = await response.text();
+      // Handle streaming response
+      const reader = response.body?.getReader();
+      const decoder = new TextDecoder();
       let aiResponse = "";
 
-      try {
-        const data = JSON.parse(responseText);
-        aiResponse = data.message || data.response || data.text || data.output || responseText;
-      } catch {
-        aiResponse = responseText;
-      }
+      if (reader) {
+        // Add empty assistant message that we'll update
+        setMessages((prev) => [...prev, { role: "assistant", content: "" }]);
+        
+        while (true) {
+          const { done, value } = await reader.read();
+          if (done) break;
 
-      setMessages((prev) => [...prev, { role: "assistant", content: aiResponse }]);
+          const chunk = decoder.decode(value);
+          const lines = chunk.split('\n');
+
+          for (const line of lines) {
+            if (line.startsWith('data: ')) {
+              const data = line.slice(6);
+              if (data === '[DONE]') continue;
+
+              try {
+                const parsed = JSON.parse(data);
+                const content = parsed.choices?.[0]?.delta?.content;
+                
+                if (content) {
+                  aiResponse += content;
+                  // Update the last message with accumulated content
+                  setMessages((prev) => {
+                    const newMessages = [...prev];
+                    newMessages[newMessages.length - 1] = {
+                      role: "assistant",
+                      content: aiResponse
+                    };
+                    return newMessages;
+                  });
+                }
+              } catch (e) {
+                // Skip invalid JSON
+              }
+            }
+          }
+        }
+      }
     } catch (error) {
       console.error("Error asking question:", error);
       toastHook({
         title: "Error",
-        description: "Failed to get AI response. Please try again.",
+        description: error instanceof Error ? error.message : "Failed to get AI response. Please try again.",
         variant: "destructive",
+      });
+      // Remove the empty assistant message if there was an error
+      setMessages((prev) => {
+        const lastMsg = prev[prev.length - 1];
+        if (lastMsg?.role === "assistant" && !lastMsg.content) {
+          return prev.slice(0, -1);
+        }
+        return prev;
       });
     } finally {
       setIsLoading(false);
