@@ -216,84 +216,89 @@ const Mistakes = () => {
             </Card>
           </div>
 
-          {/* Focus Areas and Chart Row */}
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <Card className="md:col-span-1">
-              <CardHeader className="pb-3">
+          {/* Focus Area and Common Error Row - Compact */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <Card>
+              <CardHeader className="pb-2">
                 <div className="flex items-center justify-between">
                   <CardTitle className="text-sm font-medium">Focus Area</CardTitle>
                   <Target className="h-4 w-4 text-muted-foreground" />
                 </div>
               </CardHeader>
-              <CardContent>
-                <div 
-                  className="text-lg font-semibold line-clamp-2 min-h-[3.5rem]" 
-                  title={mostChallengingTopic ? mostChallengingTopic[0] : "None"}
-                >
-                  {mostChallengingTopic ? mostChallengingTopic[0] : "None"}
+              <CardContent className="pt-0">
+                <div className="flex items-center justify-between gap-3">
+                  <div 
+                    className="text-lg font-semibold line-clamp-1 flex-1" 
+                    title={mostChallengingTopic ? mostChallengingTopic[0] : "None"}
+                  >
+                    {mostChallengingTopic ? mostChallengingTopic[0] : "None"}
+                  </div>
+                  <span className="text-xs text-muted-foreground shrink-0">Needs practice</span>
                 </div>
-                <p className="text-xs text-muted-foreground mt-1">Needs practice</p>
               </CardContent>
             </Card>
 
-            <Card className="md:col-span-1">
-              <CardHeader className="pb-3">
+            <Card>
+              <CardHeader className="pb-2">
                 <div className="flex items-center justify-between">
                   <CardTitle className="text-sm font-medium">Common Error</CardTitle>
                   <AlertCircle className="h-4 w-4 text-muted-foreground" />
                 </div>
               </CardHeader>
-              <CardContent>
-                <div className="text-lg font-semibold capitalize min-h-[3.5rem] flex items-start">
-                  {mostCommonErrorType}
+              <CardContent className="pt-0">
+                <div className="flex items-center justify-between gap-3">
+                  <div className="text-lg font-semibold capitalize flex-1">
+                    {mostCommonErrorType}
+                  </div>
+                  <span className="text-xs text-muted-foreground shrink-0">Pattern detected</span>
                 </div>
-                <p className="text-xs text-muted-foreground mt-1">Pattern detected</p>
               </CardContent>
             </Card>
-
-            {chartData.length > 0 && (
-              <Card className="md:col-span-1 flex flex-col">
-                <CardHeader className="pb-3">
-                  <CardTitle className="text-sm font-medium">Progress</CardTitle>
-                </CardHeader>
-                <CardContent className="flex-1 flex items-center justify-center pb-6">
-                  <ChartContainer
-                    config={{
-                      quiz: {
-                        label: "Quiz",
-                        color: "hsl(var(--destructive))",
-                      },
-                      exercise: {
-                        label: "Exercise",
-                        color: "hsl(var(--primary))",
-                      },
-                      practice: {
-                        label: "Practice",
-                        color: "hsl(var(--secondary))",
-                      },
-                    }}
-                    className="aspect-square w-full max-w-[200px] mx-auto"
-                  >
-                    <ResponsiveContainer width="100%" height="100%">
-                      <LineChart data={chartData}>
-                        <CartesianGrid strokeDasharray="3 3" className="stroke-muted" />
-                        <XAxis
-                          dataKey="date"
-                          tickFormatter={(date) => new Date(date).toLocaleDateString('en-US', { day: 'numeric' })}
-                          className="text-[10px]"
-                        />
-                        <YAxis className="text-[10px]" />
-                        <ChartTooltip content={<ChartTooltipContent />} />
-                        <Line type="monotone" dataKey="quiz" stroke="var(--color-quiz)" strokeWidth={2} dot={false} />
-                        <Line type="monotone" dataKey="exercise" stroke="var(--color-exercise)" strokeWidth={2} dot={false} />
-                        <Line type="monotone" dataKey="practice" stroke="var(--color-practice)" strokeWidth={2} dot={false} />
-                      </LineChart>
-                    </ResponsiveContainer>
-                  </ChartContainer>
-                </CardContent>
-              </Card>
-            )}
           </div>
+
+          {/* Progress Chart - Full Width */}
+          {chartData.length > 0 && (
+            <Card className="w-full">
+              <CardHeader className="pb-2">
+                <CardTitle className="text-sm font-medium text-center">Progress Over Time</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <ChartContainer
+                  config={{
+                    quiz: {
+                      label: "Quiz",
+                      color: "hsl(var(--destructive))",
+                    },
+                    exercise: {
+                      label: "Exercise",
+                      color: "hsl(var(--primary))",
+                    },
+                    practice: {
+                      label: "Practice",
+                      color: "hsl(var(--secondary))",
+                    },
+                  }}
+                  className="h-[250px] w-full"
+                >
+                  <ResponsiveContainer width="100%" height="100%">
+                    <LineChart data={chartData}>
+                      <CartesianGrid strokeDasharray="3 3" className="stroke-muted" />
+                      <XAxis
+                        dataKey="date"
+                        tickFormatter={(date) => new Date(date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
+                        className="text-xs"
+                      />
+                      <YAxis className="text-xs" />
+                      <ChartTooltip content={<ChartTooltipContent />} />
+                      <Line type="monotone" dataKey="quiz" stroke="var(--color-quiz)" strokeWidth={2} dot={false} />
+                      <Line type="monotone" dataKey="exercise" stroke="var(--color-exercise)" strokeWidth={2} dot={false} />
+                      <Line type="monotone" dataKey="practice" stroke="var(--color-practice)" strokeWidth={2} dot={false} />
+                    </LineChart>
+                  </ResponsiveContainer>
+                </ChartContainer>
+              </CardContent>
+            </Card>
+          )}
 
           {patterns.commonStepKeywords.length > 0 && (
             <Card>
