@@ -75,7 +75,9 @@ export default function Login() {
     setLoading(true);
 
     try {
-      const { needsEmailConfirmation } = await signUp(email, password, selectedRole);
+      // Use email as fullName by default, or user can provide their own
+      const fullName = email.split('@')[0];
+      const { needsEmailConfirmation } = await signUp(email, password, fullName, selectedRole);
       if (needsEmailConfirmation) {
         setShowEmailConfirmation(true);
       }

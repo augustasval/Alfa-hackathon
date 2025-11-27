@@ -21,19 +21,18 @@ interface ReportWithSession {
   parent_id: string;
   summary: string;
   accuracy_percentage: number | null;
-  key_insights: string | null;
-  recommendations: string | null;
+  key_insights: string[] | null;
+  recommendations: string[] | null;
+  report_content: string;
   created_at: string;
   session: {
     id: string;
     topic: string;
-    started_at: string;
-    duration_minutes: number;
-    problems_attempted: number;
-    problems_correct: number;
-    questions_asked: number;
-    struggle_areas: string | null;
-  };
+    created_at: string;
+    duration_minutes: number | null;
+    completed: boolean;
+    user_id: string;
+  } | null;
 }
 
 export default function SessionReports({ students }: SessionReportsProps) {
@@ -118,8 +117,8 @@ export default function SessionReports({ students }: SessionReportsProps) {
                     <div>
                       <h3 className="text-lg font-semibold">{student?.name}</h3>
                       <p className="text-sm text-gray-500">
-                        {report.session?.started_at && new Date(report.session.started_at).toLocaleDateString()} at{' '}
-                        {report.session?.started_at && new Date(report.session.started_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                        {report.session?.created_at && new Date(report.session.created_at).toLocaleDateString()} at{' '}
+                        {report.session?.created_at && new Date(report.session.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                       </p>
                       <p className="text-sm text-gray-500 flex items-center gap-1">
                         <Clock className="w-3 h-3" />
@@ -137,55 +136,36 @@ export default function SessionReports({ students }: SessionReportsProps) {
                     <div className="text-gray-800">{report.session?.topic || 'General Practice'}</div>
                   </div>
 
-                  {/* Stats Grid */}
-                  <div className="grid grid-cols-3 gap-3 mb-4 p-3 bg-white rounded-md border">
-                    <div className="text-center">
-                      <div className="text-xs text-gray-500 mb-1 flex items-center justify-center gap-1">
-                        <Target className="w-3 h-3" />
-                        Problems Attempted
-                      </div>
-                      <div className="text-xl font-bold">{report.session?.problems_attempted || 0}</div>
-                    </div>
-                    <div className="text-center">
-                      <div className="text-xs text-gray-500 mb-1">Solved Correctly</div>
-                      <div className="text-xl font-bold text-green-600">{report.session?.problems_correct || 0}</div>
-                    </div>
-                    <div className="text-center">
-                      <div className="text-xs text-gray-500 mb-1 flex items-center justify-center gap-1">
-                        <HelpCircle className="w-3 h-3" />
-                        Questions Asked
-                      </div>
-                      <div className="text-xl font-bold">{report.session?.questions_asked || 0}</div>
-                    </div>
+                  {/* Summary */}
+                  <div className="mb-4">
+                    <div className="text-sm font-medium text-gray-600 mb-1">Summary:</div>
+                    <div className="text-sm text-gray-700">{report.summary || report.report_content}</div>
                   </div>
 
-                  {/* Struggle Areas */}
-                  {report.session?.struggle_areas && (
-                    <div className="mb-3">
-                      <div className="text-sm font-medium text-gray-600 mb-1 flex items-center gap-1">
-                        <AlertTriangle className="w-3 h-3 text-red-500" />
-                        Struggle Areas:
-                      </div>
-                      <div className="text-sm text-red-600">{report.session.struggle_areas}</div>
-                    </div>
-                  )}
-
                   {/* Key Insights */}
-                  {report.key_insights && (
+                  {report.key_insights && report.key_insights.length > 0 && (
                     <div className="mb-3">
                       <div className="text-sm font-medium text-gray-600 mb-1 flex items-center gap-1">
                         <Lightbulb className="w-3 h-3 text-yellow-500" />
                         Key Insights:
                       </div>
-                      <div className="text-sm text-gray-600">{report.key_insights}</div>
+                      <ul className="text-sm text-gray-600 list-disc list-inside">
+                        {report.key_insights.map((insight, idx) => (
+                          <li key={idx}>{insight}</li>
+                        ))}
+                      </ul>
                     </div>
                   )}
 
                   {/* Recommendations */}
-                  {report.recommendations && (
+                  {report.recommendations && report.recommendations.length > 0 && (
                     <div>
                       <div className="text-sm font-medium text-gray-600 mb-1">Recommendations:</div>
-                      <div className="text-sm text-gray-600">{report.recommendations}</div>
+                      <ul className="text-sm text-gray-600 list-disc list-inside">
+                        {report.recommendations.map((rec, idx) => (
+                          <li key={idx}>{rec}</li>
+                        ))}
+                      </ul>
                     </div>
                   )}
                 </div>
