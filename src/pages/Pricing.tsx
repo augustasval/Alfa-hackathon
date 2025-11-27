@@ -115,8 +115,8 @@ export default function Pricing() {
             </Button>
           </div>
           <div className="flex items-center gap-3">
-            <img src="/logo/logo.png" alt="Jolvita Logo" className="h-12 w-12" />
-            <img src="/name/brand-name.png" alt="Jolvita" className="h-12" />
+            <img src="/logo/logo.svg" alt="Jolvita Logo" className="h-12 w-12" />
+            <img src="/name/brand-name.svg" alt="Jolvita" className="h-12" />
           </div>
         </div>
       </nav>
