@@ -14,27 +14,55 @@ serve(async (req) => {
 
   try {
     const authHeader = req.headers.get('Authorization');
+    console.log('Authorization header present:', !!authHeader);
+    
     if (!authHeader) {
+      console.error('No authorization header provided');
       throw new Error('Missing authorization header');
     }
 
-    // Create Supabase clients
-    const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
-    const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
-    const supabaseAnonKey = Deno.env.get('SUPABASE_ANON_KEY')!;
+    // Verify environment variables
+    const supabaseUrl = Deno.env.get('SUPABASE_URL');
+    const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY');
+    const supabaseAnonKey = Deno.env.get('SUPABASE_ANON_KEY');
+    
+    console.log('Environment variables present:', {
+      url: !!supabaseUrl,
+      serviceKey: !!supabaseServiceKey,
+      anonKey: !!supabaseAnonKey
+    });
+
+    if (!supabaseUrl || !supabaseServiceKey || !supabaseAnonKey) {
+      console.error('Missing required environment variables');
+      throw new Error('Server configuration error');
+    }
+
+    // Client with service role for admin operations
+    const supabaseAdmin = createClient(supabaseUrl, supabaseServiceKey);
 
     // Client with user's auth for validation
     const supabaseUser = createClient(supabaseUrl, supabaseAnonKey, {
       global: { headers: { Authorization: authHeader } },
     });
 
-    // Client with service role for admin operations
-    const supabaseAdmin = createClient(supabaseUrl, supabaseServiceKey);
-
     // Verify the parent is authenticated
+    console.log('Attempting to get user from auth header');
     const { data: { user: parentUser }, error: authError } = await supabaseUser.auth.getUser();
-    if (authError || !parentUser) {
-      throw new Error('Unauthorized');
+    
+    console.log('Auth result:', {
+      hasUser: !!parentUser,
+      userId: parentUser?.id,
+      error: authError?.message
+    });
+
+    if (authError) {
+      console.error('Auth error:', authError);
+      throw new Error(`Authentication failed: ${authError.message}`);
+    }
+
+    if (!parentUser) {
+      console.error('No user returned from getUser');
+      throw new Error('Unauthorized: No user found');
     }
 
     // Verify parent role

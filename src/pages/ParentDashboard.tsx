@@ -224,19 +224,19 @@ export default function ParentDashboard() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-gradient-to-b from-background to-secondary/20">
       {/* Navigation */}
-      <nav className="bg-white border-b border-gray-200 px-6 py-4">
+      <nav className="bg-card border-b border-border px-6 py-4 sticky top-0 z-50">
         <div className="max-w-7xl mx-auto flex justify-between items-center">
           <div className="flex items-center gap-3">
-            <GraduationCap className="w-8 h-8 text-purple-600" />
-            <span className="text-xl font-bold bg-gradient-to-r from-purple-600 to-blue-600 bg-clip-text text-transparent">
+            <GraduationCap className="w-8 h-8 text-primary" />
+            <span className="text-xl font-bold text-foreground">
               Math Mastery AI
             </span>
             <Badge variant="secondary" className="ml-2">Parent Portal</Badge>
           </div>
           <div className="flex items-center gap-4">
-            <span className="text-gray-600">{profile?.full_name}</span>
+            <span className="text-muted-foreground">{profile?.full_name}</span>
             <Button variant="outline" size="sm" onClick={() => navigate('/pricing')}>
               <CreditCard className="w-4 h-4 mr-2" />
               Plans
@@ -253,16 +253,16 @@ export default function ParentDashboard() {
       <div className="max-w-7xl mx-auto p-6">
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
           {/* My Students Card */}
-          <Card>
+          <Card className="bg-card border-border">
             <CardHeader className="flex flex-row items-center justify-between">
-              <CardTitle className="flex items-center gap-2">
-                <Users className="w-5 h-5 text-purple-500" />
+              <CardTitle className="flex items-center gap-2 text-foreground">
+                <Users className="w-5 h-5 text-primary" />
                 My Students
               </CardTitle>
               <Button
                 size="sm"
                 onClick={() => setShowAddStudent(true)}
-                className="bg-purple-600 hover:bg-purple-700"
+                className="bg-primary text-primary-foreground hover:bg-primary/90"
               >
                 <Plus className="w-4 h-4 mr-1" />
                 Add Student
@@ -270,8 +270,8 @@ export default function ParentDashboard() {
             </CardHeader>
             <CardContent>
               {students.length === 0 ? (
-                <div className="text-center py-8 text-gray-500">
-                  <Users className="w-12 h-12 mx-auto mb-4 text-gray-300" />
+                <div className="text-center py-8 text-muted-foreground">
+                  <Users className="w-12 h-12 mx-auto mb-4 text-muted-foreground/50" />
                   <p>No students yet.</p>
                   <p className="text-sm mt-1">Add your first student to get started.</p>
                 </div>
@@ -282,24 +282,24 @@ export default function ParentDashboard() {
                     return (
                       <div
                         key={student.id}
-                        className="p-4 bg-gray-50 rounded-lg border border-gray-100"
+                        className="p-4 bg-background rounded-lg border border-border hover:shadow-md transition-shadow"
                       >
                         <div className="flex items-center justify-between mb-3">
                           <div className="flex items-start gap-3">
-                            <div className="p-2 bg-purple-100 rounded-full">
-                              <User className="w-4 h-4 text-purple-600" />
+                            <div className="p-2 bg-primary/10 rounded-full">
+                              <User className="w-4 h-4 text-primary" />
                             </div>
                             <div>
                               <div className="flex items-center gap-2">
-                                <span className="font-semibold">{student.name}</span>
+                                <span className="font-semibold text-foreground">{student.name}</span>
                                 {student.linked_profile_id && (
-                                  <Badge variant="outline" className="text-xs bg-green-50 text-green-700 border-green-200">
+                                  <Badge variant="outline" className="text-xs bg-primary/10 text-primary border-primary/20">
                                     <Link className="w-3 h-3 mr-1" />
                                     Linked
                                   </Badge>
                                 )}
                               </div>
-                              <div className="text-sm text-gray-500">Grade {student.grade_level}</div>
+                              <div className="text-sm text-muted-foreground">Grade {student.grade_level}</div>
                             </div>
                           </div>
                           <Button
@@ -317,14 +317,14 @@ export default function ParentDashboard() {
 
                         {/* Activity Section */}
                         {student.linked_profile_id ? (
-                          <div className="mt-3 pt-3 border-t border-gray-200">
+                          <div className="mt-3 pt-3 border-t border-border">
                             <div className="grid grid-cols-3 gap-3">
                               {/* Last Activity */}
                               <div className="flex items-center gap-2">
-                                <Activity className="w-4 h-4 text-blue-500" />
+                                <Activity className="w-4 h-4 text-primary" />
                                 <div>
-                                  <div className="text-xs text-gray-500">Last Active</div>
-                                  <div className="text-sm font-medium">
+                                  <div className="text-xs text-muted-foreground">Last Active</div>
+                                  <div className="text-sm font-medium text-foreground">
                                     {activity?.lastActivity
                                       ? new Date(activity.lastActivity).toLocaleDateString()
                                       : 'No activity'}
@@ -334,10 +334,10 @@ export default function ParentDashboard() {
 
                               {/* Tasks Completed */}
                               <div className="flex items-center gap-2">
-                                <CheckCircle className="w-4 h-4 text-green-500" />
+                                <CheckCircle className="w-4 h-4 text-primary" />
                                 <div>
-                                  <div className="text-xs text-gray-500">Tasks Done</div>
-                                  <div className="text-sm font-medium">
+                                  <div className="text-xs text-muted-foreground">Tasks Done</div>
+                                  <div className="text-sm font-medium text-foreground">
                                     {activity?.totalTasksCompleted || 0}/{activity?.totalTasks || 0}
                                   </div>
                                 </div>
@@ -345,10 +345,10 @@ export default function ParentDashboard() {
 
                               {/* Current Topic */}
                               <div className="flex items-center gap-2">
-                                <BookOpen className="w-4 h-4 text-purple-500" />
+                                <BookOpen className="w-4 h-4 text-primary" />
                                 <div>
-                                  <div className="text-xs text-gray-500">Current Topic</div>
-                                  <div className="text-sm font-medium truncate max-w-[100px]">
+                                  <div className="text-xs text-muted-foreground">Current Topic</div>
+                                  <div className="text-sm font-medium truncate max-w-[100px] text-foreground">
                                     {activity?.currentTopic || 'None'}
                                   </div>
                                 </div>
@@ -358,13 +358,13 @@ export default function ParentDashboard() {
                             {/* Progress Bar */}
                             {activity && activity.totalTasks > 0 && (
                               <div className="mt-3">
-                                <div className="flex justify-between text-xs text-gray-500 mb-1">
+                                <div className="flex justify-between text-xs text-muted-foreground mb-1">
                                   <span>Progress</span>
                                   <span>{Math.round((activity.totalTasksCompleted / activity.totalTasks) * 100)}%</span>
                                 </div>
-                                <div className="w-full bg-gray-200 rounded-full h-2">
+                                <div className="w-full bg-secondary rounded-full h-2">
                                   <div
-                                    className="bg-gradient-to-r from-purple-500 to-blue-500 h-2 rounded-full transition-all"
+                                    className="bg-primary h-2 rounded-full transition-all"
                                     style={{ width: `${(activity.totalTasksCompleted / activity.totalTasks) * 100}%` }}
                                   />
                                 </div>
@@ -372,8 +372,8 @@ export default function ParentDashboard() {
                             )}
                           </div>
                         ) : (
-                          <div className="mt-3 pt-3 border-t border-gray-200">
-                            <div className="flex items-center gap-2 text-sm text-gray-500">
+                          <div className="mt-3 pt-3 border-t border-border">
+                            <div className="flex items-center gap-2 text-sm text-muted-foreground">
                               <Activity className="w-4 h-4" />
                               <span>Activity will appear once student links their account</span>
                             </div>
@@ -388,17 +388,17 @@ export default function ParentDashboard() {
           </Card>
 
           {/* Upcoming Sessions Card */}
-          <Card>
+          <Card className="bg-card border-border">
             <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <CalendarDays className="w-5 h-5 text-blue-500" />
+              <CardTitle className="flex items-center gap-2 text-foreground">
+                <CalendarDays className="w-5 h-5 text-primary" />
                 Upcoming Sessions
               </CardTitle>
             </CardHeader>
             <CardContent>
               {scheduledSessions.filter(s => s.status === 'pending').length === 0 ? (
-                <div className="text-center py-8 text-gray-500">
-                  <CalendarDays className="w-12 h-12 mx-auto mb-4 text-gray-300" />
+                <div className="text-center py-8 text-muted-foreground">
+                  <CalendarDays className="w-12 h-12 mx-auto mb-4 text-muted-foreground/50" />
                   <p>No upcoming sessions scheduled.</p>
                   <p className="text-sm mt-1">Schedule a session for your student.</p>
                 </div>
@@ -412,13 +412,13 @@ export default function ParentDashboard() {
                       return (
                         <div
                           key={session.id}
-                          className="p-4 bg-blue-50 rounded-lg border border-blue-100"
+                          className="p-4 bg-primary/5 rounded-lg border border-primary/20"
                         >
-                          <div className="font-semibold">{student?.name}</div>
-                          <div className="text-sm text-gray-600 mt-1">
+                          <div className="font-semibold text-foreground">{student?.name}</div>
+                          <div className="text-sm text-muted-foreground mt-1">
                             {session.topic || 'Practice Session'}
                           </div>
-                          <div className="flex items-center gap-4 mt-2 text-sm text-gray-500">
+                          <div className="flex items-center gap-4 mt-2 text-sm text-muted-foreground">
                             <span className="flex items-center gap-1">
                               <CalendarDays className="w-3 h-3" />
                               {new Date(session.scheduled_date).toLocaleDateString()}
