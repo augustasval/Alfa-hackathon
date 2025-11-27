@@ -78,9 +78,10 @@ export const mistakeService = {
       .from('mistakes')
       .select(`
         *,
-        profiles(id, full_name, email)
+        profiles!mistakes_user_id_fkey(id, full_name, email)
       `)
-      .in('user_id', linkedProfileIds);
+      .in('user_id', linkedProfileIds)
+      .order('created_at', { ascending: false });
 
     if (error) throw error;
     // Cast type to the proper enum values
