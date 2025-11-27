@@ -50,7 +50,7 @@ export function ScheduledSessionsCard() {
         .from('scheduled_sessions')
         .select('*')
         .eq('student_id', studentData.id)
-        .eq('status', 'pending')
+        .eq('status', 'scheduled')
         .gte('scheduled_date', new Date().toISOString().split('T')[0])
         .order('scheduled_date', { ascending: true })
         .order('scheduled_time', { ascending: true })
