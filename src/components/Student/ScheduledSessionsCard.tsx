@@ -26,6 +26,7 @@ export function ScheduledSessionsCard() {
   const [sessions, setSessions] = useState<ScheduledSession[]>([]);
   const [loading, setLoading] = useState(true);
   const [currentTime, setCurrentTime] = useState(new Date());
+  const [hasParentLink, setHasParentLink] = useState<boolean | null>(null);
 
   useEffect(() => {
     if (user) {
@@ -135,8 +136,11 @@ export function ScheduledSessionsCard() {
 
       if (!studentData) {
         setSessions([]);
+        setHasParentLink(false);
         return;
       }
+
+      setHasParentLink(true);
 
       // Then get scheduled sessions for this student
       const { data, error } = await supabase
@@ -166,6 +170,11 @@ export function ScheduledSessionsCard() {
         </CardContent>
       </Card>
     );
+  }
+
+  // Don't show component if student has no parent link
+  if (hasParentLink === false) {
+    return null;
   }
 
   if (sessions.length === 0) {
