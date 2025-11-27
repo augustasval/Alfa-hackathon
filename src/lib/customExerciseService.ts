@@ -7,6 +7,8 @@ export interface CustomExercise {
   question: string;
   difficulty: string;
   created_at: string;
+  is_completed: boolean;
+  completed_at: string | null;
 }
 
 export const customExerciseService = {
@@ -45,6 +47,18 @@ export const customExerciseService = {
     const { error } = await supabase
       .from('custom_exercises')
       .delete()
+      .eq('id', id);
+
+    if (error) throw error;
+  },
+
+  async markAsCompleted(id: string): Promise<void> {
+    const { error } = await supabase
+      .from('custom_exercises')
+      .update({
+        is_completed: true,
+        completed_at: new Date().toISOString(),
+      })
       .eq('id', id);
 
     if (error) throw error;

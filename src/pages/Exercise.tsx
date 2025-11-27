@@ -14,6 +14,7 @@ import { useLearningPlan } from "@/hooks/useLearningPlan";
 import { useTaskProgress } from "@/hooks/useTaskProgress";
 import { SessionManager } from "@/lib/sessionManager";
 import { mistakeService } from "@/lib/mistakeService";
+import { customExerciseService } from "@/lib/customExerciseService";
 import { Problem, WebhookStep, getDifficultyColor } from "@/types/exerciseTypes";
 import { problemsByTopic, defaultProblems } from "@/data/exerciseProblems";
 import {
@@ -177,6 +178,15 @@ const Exercise = () => {
     // Mark current problem as completed
     if (selectedProblem) {
       setCompletedProblemIds(prev => [...prev, selectedProblem.id]);
+      
+      // If it's a custom exercise, mark it as completed in the database
+      if (selectedProblem.id.length > 20) { // Custom exercise IDs are UUIDs (longer than system IDs)
+        try {
+          await customExerciseService.markAsCompleted(selectedProblem.id);
+        } catch (error) {
+          console.error('Error marking custom exercise as completed:', error);
+        }
+      }
     }
 
     // Update active session statistics if session is active
@@ -287,6 +297,7 @@ const Exercise = () => {
         completedProblemIds={completedProblemIds}
         currentTaskTitle={currentTask?.title}
         onProblemSelect={handleProblemSelect}
+        onCompletedIdsLoaded={(ids) => setCompletedProblemIds(prev => [...prev, ...ids])}
       />
     );
   }

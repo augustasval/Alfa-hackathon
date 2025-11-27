@@ -26,6 +26,7 @@ interface ProblemSelectionScreenProps {
   completedProblemIds?: string[];
   currentTaskTitle?: string;
   onProblemSelect: (problem: Problem) => void;
+  onCompletedIdsLoaded?: (ids: string[]) => void;
 }
 
 export const ProblemSelectionScreen = ({
@@ -34,6 +35,7 @@ export const ProblemSelectionScreen = ({
   completedProblemIds = [],
   currentTaskTitle,
   onProblemSelect,
+  onCompletedIdsLoaded,
 }: ProblemSelectionScreenProps) => {
   const navigate = useNavigate();
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -62,6 +64,10 @@ export const ProblemSelectionScreen = ({
       
       try {
         const saved = await customExerciseService.getExercisesByTopic(currentTaskTitle);
+        const completedIds = saved
+          .filter(exercise => exercise.is_completed)
+          .map(exercise => exercise.id);
+        
         const savedProblems: Problem[] = saved.map((exercise) => ({
           id: exercise.id,
           question: exercise.question,
@@ -76,6 +82,11 @@ export const ProblemSelectionScreen = ({
           ]
         }));
         setConfirmedProblems(savedProblems);
+        
+        // Add completed custom exercises to completedProblemIds
+        if (completedIds.length > 0) {
+          onCompletedIdsLoaded?.(completedIds);
+        }
       } catch (error) {
         console.error('Error loading saved exercises:', error);
       } finally {
@@ -502,7 +513,7 @@ export const ProblemSelectionScreen = ({
             ) : confirmedProblems.length > 0 && (
               <div className="mb-6">
                 <div className="flex items-center gap-2 mb-3">
-                  <Badge className="bg-purple-500/20 text-purple-400 border-purple-500/50">
+                  <Badge className="bg-primary/20 text-primary border-primary/50">
                     <Upload className="h-3 w-3 mr-1" />
                     Your Saved Problems
                   </Badge>
